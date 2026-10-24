@@ -1,249 +1,235 @@
-# Nikon Picture Control（.NCP / .NP2 / .NP3）格式分析与转换工具
+# 尼康优化校准（.NCP / .NP2 / .NP3）格式分析与转换工具
 
-Reverse engineering of Nikon's Picture Control (优化校准) file formats, plus tools to
-convert newer `.NP2` / `.NP3` presets down to `.NCP` — the only format old bodies
-(Nikon D300 / D300S / D90 …) can read.
+English version: [README_EN.md](README_EN.md)
 
-All numbers in this document were measured on real files, not guessed.
-Sample set: 42 factory presets exported by Nikon Picture Control Utility 2
-(6 × .NCP, 8 × .NP2, 28 × .NP3).
+对尼康优化校准（Picture Control）文件格式的逆向分析，以及把新版 `.NP2` / `.NP3`
+预设降级转换为 `.NCP` 的工具——`.NCP` 是老机身（尼康 D300 / D300S / D90 等）
+唯一能识别的格式。
 
----
+文中所有数字都来自对真实文件的实测，不是推测。
+样本：用尼康 Picture Control Utility 2 导出的 42 个原厂预设
+（6 个 .NCP、8 个 .NP2、28 个 .NP3）。
 
-## 1. The three generations
+## 一、三代格式
 
 | | NCP | NP2 | NP3 |
 |---|---|---|---|
-| Version string | `0100` | `0210` | `0300` |
-| Container | "header + type/length record" | TLV card chain | TLV card chain |
-| Size | always 52 bytes (no curve) | 208 + 8 + caption | 248 + 8 + caption |
-| Bodies | all PC-capable bodies | D810 and later | Z series, D6, D780 |
-| Extra parameters | — | clarity | quick sharp, mid-range sharp, effect level |
+| 版本串 | `0100` | `0210` | `0300` |
+| 容器 | 抬头 + 类型/长度记录 | TLV 卡片链 | TLV 卡片链 |
+| 大小 | 恒 52 字节（不带曲线） | 208 + 8 + 说明文字 | 248 + 8 + 说明文字 |
+| 机型 | 所有支持优化校准的老机身 | D810 起 | Z 系列、D6、D780 |
+| 新增参数 | — | 清晰度 | 快速锐化、中等锐化、效果级别 |
 
-All three start with the same magic: `NCP\0`.
+三代文件的魔数相同：`NCP\0`。
 
----
-
-## 2. NCP (0100) layout
+## 二、NCP（0100）布局
 
 ```
-offset 0   4   "NCP\0"
-offset 4   4   record type = 1 (profile data)
-offset 8   4   record length = 36
-offset 12  4   version "0100"
-offset 16  20  name, ASCII, zero padded
-offset 36  2   base curve id (big endian)
-offset 38  1   modified flag
-offset 39  1   0xFF (purpose unknown)
-offset 40  8   the eight sliders
-offset 48  4   0x00000000 (end marker)
-= 52 bytes
+偏移 0    4   "NCP\0"
+偏移 4    4   记录类型 = 1（配置数据）
+偏移 8    4   记录长度 = 36
+偏移 12   4   版本 "0100"
+偏移 16   20  名字，ASCII，补零
+偏移 36   2   底子（基准曲线）编号，大端
+偏移 38   1   是否被用户修改
+偏移 39   1   0xFF（用途未明）
+偏移 40   8   八个滑块
+偏移 48   4   0x00000000（结束标记）
+合计 52 字节
 ```
 
-Slider byte encoding (`value + 0x80`), range −126…126, plus three sentinels:
+滑块字节 = `数值 + 0x80`，范围 −126…126，另有三个哨兵值：
 
-| byte | meaning |
+| 字节 | 含义 |
 |---|---|
-| `0x00` | Auto (−128) |
-| `0x01` | Curve (−127) — handled by the LUT, seen in contrast / brightness |
-| `0xFF` | Not applicable (127) |
+| `0x00` | 自动（−128） |
+| `0x01` | 曲线接管（−127）——见于对比度/亮度，表示交给 LUT |
+| `0xFF` | 不适用（127） |
 
-Slider order: sharpening, contrast, brightness, saturation, hue,
-filter effect (mono), toning (mono), toning strength (mono).
+滑块顺序：锐化、对比度、亮度、饱和度、色相、滤镜效果（单色）、调色（单色）、调色强度（单色）。
 
-Known base curve ids — there are only six in the NCP era:
-
-```
-0001 standard   03C2 neutral   00C3 vivid
-0486 portrait   04C7 landscape 064D monochrome
-```
-
-`028E` (flat) and `02CF` (auto) and the 20 creative ids `0801`–`0814`
-do **not** exist in NCP. A file can still be produced, but old bodies
-have no curve to go with those ids.
-
-Monochrome toning enum (from public reverse-engineering docs, matches
-D300 menu order): `0 BW, 1 sepia, 2 cyanotype, 3 red, 4 yellow, 5 green,
-6 blue-green, 7 blue, 8 purple-blue, 9 red-purple`.
-Mono filter: `0 off, 1 yellow, 2 orange, 3 red, 4 green`.
-
----
-
-## 3. NP2 / NP3 (0210 / 0300) layout
-
-TLV chain starting after the 4-byte magic; each card is
-`type(4) + length(4) + data`, terminated by 4 zero bytes.
+NCP 时代认得的底子编号只有六个：
 
 ```
-type 0x100  version string ("0210" / "0300")
-type 0x200  name, UTF-16BE, 20 bytes
-type 0x300  base curve id (2 bytes)          <- same ids as NCP
-type 0x400  always 00 00
-type 0x500  always FF 01
-type 0x600  sharpening
-type 0x700  clarity                          <- NP2+, no NCP slot
-type 0x800  contrast
-type 0x900  brightness
-type 0xA00  saturation
-type 0xB00  hue
-type 0xC00  filter effect (mono)
-type 0xD00  toning (mono)
-type 0xE00  toning strength (mono)
-type 0xF00..0x1200  reserved, FF 01
-type 0x1300..0x1600 NP3 only (quick sharp / mid-range sharp / effect level …)
-type 0x10100 caption text
+0001 标准   03C2 中性   00C3 鲜艳
+0486 人像   04C7 风景   064D 单色
 ```
 
-Value encoding: `value = (v - 0x80) * step / 16`.
-Step code `04` means a 0.25 increment; `0xFF` means not applicable.
+`028E`（平面）、`02CF`（自动）和 20 个创意编号 `0801`–`0814` 在 NCP 里
+**不存在**——文件照样能生成，但老机身没有对应的曲线。
 
----
+单色调色枚举（与 D300 菜单顺序一致，已与公开逆向文档交叉验证）：
+`0 黑白、1 棕褐、2 青、3 红、4 黄、5 绿、6 蓝绿、7 蓝、8 紫蓝、9 红紫`。
+单色滤镜：`0 关、1 黄、2 橙、3 红、4 绿`。
 
-## 4. NP2 / NP3 → NCP mapping
+## 三、NP2 / NP3（0210 / 0300）布局
+
+魔数之后是 TLV 卡片链，每张卡 `type(4) + length(4) + data`，以 4 字节 0 结束。
 
 ```
-card 0x600 sharpening  -> NCP[40]
-card 0x800 contrast    -> NCP[41]
-card 0x900 brightness  -> NCP[42]
-card 0xA00 saturation  -> NCP[43]
-card 0xB00 hue         -> NCP[44]
-card 0xC00 filter      -> NCP[45]
-card 0xD00 toning      -> NCP[46]
-card 0xE00 toning str. -> NCP[47]
-card 0x300 base id     -> NCP[36:38]
+type 0x100   版本串（"0210" / "0300"）
+type 0x200   名字，UTF-16BE，20 字节
+type 0x300   底子编号（2 字节）              ← 与 NCP 同一套编号
+type 0x400   恒 00 00
+type 0x500   恒 FF 01
+type 0x600   锐化
+type 0x700   清晰度                          ← NP2 起，NCP 无对应位
+type 0x800   对比度
+type 0x900   亮度
+type 0xA00   饱和度
+type 0xB00   色相
+type 0xC00   滤镜效果（单色）
+type 0xD00   调色（单色）
+type 0xE00   调色强度（单色）
+type 0xF00..0x1200   保留，FF 01
+type 0x1300..0x1600  NP3 独有（快速锐化 / 中等锐化 / 效果级别等）
+type 0x10100 说明文字
 ```
 
-Verified: 8 slots × 6 presets × 2 formats = **96 bytes, 96 hits**.
-End-to-end: 6 presets × NP2/NP3 = 12 files rebuilt **byte-identical
-(52/52)** to Nikon's own NCP files.
+数值编码：`值 = (字节0 − 0x80) × 字节1 / 16`。步进码 `04` 表示 0.25 一档；
+`0xFF` 表示不适用。
 
-### What cannot be converted
+## 四、NP2 / NP3 → NCP 映射
 
-* **card 0x700 (clarity)** — NCP has no slot for it.
-* **cards 0x1300–0x1600** — NP3-only, no slot.
-* **0.25 steps** — NCP is integer-only, e.g. neutral's +0.50 can only become 0 or 1.
-* **Ranges** — NP2/NP3 brightness reaches ±1.5 (NCP ±1); NP3 sharpening reaches −3 (NCP 0).
-* **Base curves** — flat / auto / 20 creative ids have no NCP equivalent. The
-  base TRC lives in camera firmware and can never be exported; the NCP only
-  stores its id. This is the real reason creative presets cannot be ported.
+```
+卡 0x600 锐化      → NCP[40]
+卡 0x800 对比度    → NCP[41]
+卡 0x900 亮度      → NCP[42]
+卡 0xA00 饱和度    → NCP[43]
+卡 0xB00 色相      → NCP[44]
+卡 0xC00 滤镜      → NCP[45]
+卡 0xD00 调色      → NCP[46]
+卡 0xE00 调色强度  → NCP[47]
+卡 0x300 底子编号  → NCP[36:38]
+```
 
-`np2ncp.py --approx` substitutes the closest of the six known bases
-(flat → neutral, auto → standard, monochrome-style → monochrome,
-everything else → standard) so the file at least loads. It is an
-approximation, not a conversion.
+实测：8 个滑块位 × 6 个预设 × 2 种新格式 = **96 字节，96 个全中**。
+端到端：6 个预设 × NP2/NP3 = 12 个文件重建后与尼康原版 NCP
+**逐字节一致（52/52）**。
 
----
+### 转不动的部分
 
-## 5. User-defined curve (UDC)
+* **卡 0x700（清晰度）**——NCP 没有这个位置。
+* **卡 0x1300–0x1600**——NP3 独有，NCP 无对应。
+* **0.25 档**——NCP 是整档，比如中性在 NP3 里的 +0.50 只能记成 0 或 1。
+* **量程**——NP2/NP3 亮度到 ±1.5（NCP 只有 ±1）；NP3 锐化到 −3（NCP 最小 0）。
+* **底子曲线**——平面/自动/20 个创意编号在 NCP 里没有等价物。底子 TRC
+  存在相机固件里，永远导不出来，NCP 只存编号。这才是创意预设无法
+  真正移植的根本原因。
 
-An NCP may carry a user curve as record type 2. Structure confirmed
-byte-for-byte by rebuilding a real PCU2 export:
+`np2ncp.py --approx` 会把认不出的底子替换成六个已知底子里最接近的
+（平面→中性、自动→标准、黑白类→单色、其余→标准），让文件至少能被
+加载——但这是近似，不是转换。
+
+## 五、用户自定义曲线（UDC）
+
+NCP 可以带一条用户曲线，即 type=2 的记录。以下结构通过逐字节重建
+一份真实的 PCU2 导出文件得到确认：
 
 ```
 "NCP\0"
-type=1  len=36   profile data
-type=2  len=578  ├─ 0..63   header
-                 └─ 64..577 257 × uint16 big endian, 0..32767
+type=1  len=36   配置数据
+type=2  len=578  ├─ 0..63    头部
+                 └─ 64..577  257 × uint16 大端，0..32767
 type=0
-= 638 bytes
+合计 638 字节
 ```
 
-* LUT input index `i` (0…256) corresponds to input `i/256`.
-* Output is 15-bit, full scale 32767, must be monotonic.
-* The UDC is applied **after** sRGB (1/2.4) gamma, i.e. it is the last step
-  of the pipeline — a luminosity-only 1D LUT, so it cannot express colour shifts.
+* LUT 输入索引 `i`（0…256）对应输入 `i/256`。
+* 输出是 15 位，满量程 32767，必须单调。
+* UDC 作用在 **sRGB（1/2.4）伽马之后**，是成像流水线的最后一步——
+  它是只管亮度的一维 LUT，表达不了色彩偏移。
 
-### Header
+### 头部
 
 ```
-bytes 0-7   49 30 00 FF 00 FF 01 00   constant in all observed files
-                                      (first two bytes are not any common CRC16)
-byte  8     number of control points
-byte  9..   points, 2 bytes each: (x, y), 8-bit, x increasing
+字节 0-7   49 30 00 FF 00 FF 01 00   所有 observed 文件相同
+                                     （前两字节不是任何常见 CRC16）
+字节 8     控制点个数
+字节 9..   控制点，每点 2 字节：(x, y)，8 位，x 递增
 ```
 
-Examples read from real files:
+真实文件读出的例子：
 
-* 3 points → `(0,0) (73,140) (255,255)`; the LUT at x=73 reads 54.7%,
-  and 140/255 = 54.9% ✓
-* 4 points → `(0,0) (69,175) (179,81) (255,255)` — up, down, up, i.e. the
-  non-monotonic wave that was drawn in the editor ✓
+* 3 点 → `(0,0) (73,140) (255,255)`；该文件 LUT 在 x=73 处为 54.7%，
+  而 140/255 = 54.9% ✓
+* 4 点 → `(0,0) (69,175) (179,81) (255,255)`——升、降、升，正是
+  编辑器里画出的那条非单调波浪 ✓
 
-**Important:** the editing software rebuilds the curve from these control
-points. If you write a new LUT but keep someone else's control points, the
-displayed and applied curve will not match what you wrote. Always write both.
+**重要**：尼康软件是按这些控制点重算曲线的。如果只换 LUT 不换控制点，
+显示的曲线和实际生效的曲线都会跟你写的不一样。**两边必须写同一条曲线。**
 
-Nikon's exact spline is not confirmed. Measured reconstruction error from
-3 control points (full scale 32767): linear 2031, Catmull-Rom 1673,
-natural cubic 9783, monotone cubic 612. Rather than depend on that, this
-toolkit emits **20 control points** sampled from the target LUT, which
-drops the error to 0.6–14.6 — negligible either way.
+尼康控制点之间的确切样条算法未确认。用 3 个控制点重建真实 LUT 的误差
+（满量程 32767）：分段线性 2031、Catmull-Rom 1673、自然三次 9783、
+单调三次 612。本工具不赌算法，而是**取满 20 个控制点**密集采样目标
+LUT，误差降到 0.6–14.6——无论它用什么插值都可以忽略。
 
----
+## 六、从照片反推预设的影调曲线
 
-## 6. Fitting a preset's tone response from photos
+UDC 是流水线最后一步，所以"标准 → 目标预设"的曲线可以直接测量：
 
-Because the UDC is the last pipeline step, the curve that turns "standard"
-into "target preset" can be measured:
+1. 同一张 NEF 在尼康工坊里导出两次，滑块全部默认：
+   一次 STANDARD，一次目标预设。导出设置完全一致（sRGB、8 位、同尺寸）。
+2. `make_curve_batch.py` 会从每张 JPG 的 MakerNote 里认出用的是哪个预设
+   （搜 `03100310` 标记，名称在 +8、底子编号在 +48 小端），按亮度分箱
+   统计，生成 257 点 LUT。
+3. 写出 638 字节的 NCP，控制点与 LUT 同一条曲线。
 
-1. Export the same NEF twice from Nikon's software, sliders at default:
-   once with STANDARD, once with the target preset.
-   Keep every export setting identical (sRGB, 8-bit, same size).
-2. `make_curve_batch.py` recognises which preset each JPEG used (it reads the
-   MakerNote `03100310` marker; name at +8, base id at +48 little endian),
-   bins pixels by luminance, and produces a 257-point LUT.
-3. It writes a 638-byte NCP with matching control points.
+实测（人像 vs 标准，12,212,224 像素）：
 
-Accuracy measured on portrait vs standard (12,212,224 pixels):
-
-| | before | after curve | target |
+| | 套曲线前 | 套曲线后 | 目标 |
 |---|---|---|---|
-| mean luminance | 91.25 | 95.52 | 95.51 |
-| per-pixel luma diff | 7.73 | 2.56 | — |
+| 亮度均值 | 91.25 | 95.52 | 95.51 |
+| 逐像素亮度差 | 7.73 | 2.56 | — |
 
-Colour is a different story — chroma a\* 2.21→1.93, saturation 2.41→2.17,
-roughly **10%** of the difference. A 1D luminance LUT cannot reproduce the
-colour work a preset does. Monochrome and toned presets are where this
-approach pays off; colourful creative presets will get the tone right and
-the colour wrong.
+色彩是另一回事——色度 a\* 2.21→1.93、饱和度 2.41→2.17，大约只兑现
+**10%**。一维亮度 LUT 复现不了预设的色彩运算。**黑白类和调色类预设
+是这套方法的主场；彩色创意预设只能做到影调像、味道不像。**
 
----
+### ⚠️ 验证/预览必须用「与照相机兼容」
 
-## 7. Usage
+实测发现（尼康工坊）：同一个带曲线的 NCP，
+
+* 在**「与照相机兼容」**下，每个字节语义正确：`01` 被理解为曲线接管，
+  UDC 完整生效——这是文件设计时针对的管线，也是老机身机内的真实行为；
+* 在**「最新的优化校准系统」**下，工坊把 NCP 的滑块按新参数表的**位置**
+  硬套：对比度（`01`）显示成「中等锐化 1.00」、亮度（`01`）显示成
+  「清晰度 1.00」。曲线哨兵在新面板里没有对应位置，被当成数值 +1。
+
+所以新版系统下的预览只能当参考，**验收以「与照相机兼容」和实机为准**。
+
+## 七、用法
 
 ```bash
-# plain downgrade (base ids copied as-is, unknown ones flagged)
-python np2ncp.py <dir with .NP2/.NP3> [out dir]
+# 原样降级（底子编号照抄，认不出的会标出来）
+python np2ncp.py <含 .NP2/.NP3 的目录> [输出目录]
 
-# approximation: substitute the closest of the six NCP-recognised bases
-python np2ncp.py <dir> [out dir] --approx
+# 近似模式：把认不出的底子换成六个已知底子里最接近的
+python np2ncp.py <目录> [输出目录] --approx
 
-# inspect a real .NCP (dumps every record and the curve hex)
-python np2ncp_curve.py dump <file.ncp> [out.txt]
+# 查看真实 .NCP（摊开每条记录和曲线 hex）
+python np2ncp_curve.py dump <文件.ncp> [输出.txt]
 
-# rebuild a real .NCP from its own fields and diff byte by byte
-python np2ncp_curve.py rebuild <file.ncp>
+# 用文件自身的字段重建一份，逐字节比对
+python np2ncp_curve.py rebuild <文件.ncp>
 
-# measure a curve from two exports
-python np2ncp_curve.py measure <standard.jpg> <target.jpg> <lut.json>
+# 从两张导出图反推曲线
+python np2ncp_curve.py measure <标准版.jpg> <目标版.jpg> <lut.json>
 
-# batch: one directory of exports, STANDARD as reference
-python make_curve_batch.py <jpg dir> [out dir]
+# 批量：一个目录的导出图，以 STANDARD 为基准
+python make_curve_batch.py <jpg目录> [输出目录]
 
-# how much of the preset did the curve actually recover
-python verify_curve.py <standard.jpg> <target.jpg> <lut.json>
+# 曲线实际还原了多少
+python verify_curve.py <标准版.jpg> <目标版.jpg> <lut.json>
 ```
 
----
+## 八、仍未解决
 
-## 8. Still open
-
-* Purpose of header bytes `0..7`, especially `49 30` — not XMODEM/CCITT/
-  MODBUS/Kermit CRC16, not a plain sum.
-* Nikon's exact spline between control points.
-* `PINK` toning colour — assumed 9 (red-purple), unconfirmed;
-  SEPIA/BLUE/RED are confirmed.
-* Semantics of NP3 cards `0x1300`, `0x1400`, `0x1600` (step code is not the
-  usual `04`, so the value formula does not apply).
-* The 20 creative base curves themselves: they live in firmware, so no file
-  format trick will bring them to an old body.
+* 头部字节 `0..7` 的用途，尤其 `49 30`——不是 XMODEM/CCITT/MODBUS/
+  Kermit 任一种 CRC16，也不是简单和校验。
+* 尼康控制点之间的确切样条算法。
+* `PINK` 的调色颜色——按 9（红紫）处理，未确认；SEPIA/BLUE/RED 已确认。
+* NP3 卡 `0x1300`、`0x1400`、`0x1600` 的语义（步进码不是常规的 `04`，
+  数值公式对它们不适用）。
+* 20 条创意底子曲线本身：它们在固件里，任何文件格式层面的办法都
+  带不到老机身上。
