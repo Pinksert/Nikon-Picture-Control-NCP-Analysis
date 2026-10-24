@@ -1,0 +1,910 @@
+### 文件大小总览
+NCP: 6 个, 大小集合=[52]
+    LANDSCAPE.NCP    52
+    MONOCHROME.NCP   52
+    NEUTRAL.NCP      52
+    PORTRAIT.NCP     52
+    STANDARD.NCP     52
+    VIVID.NCP        52
+NP2: 8 个, 大小集合=[244, 262, 268, 274, 286, 290, 292]
+    AUTO.NP2         292
+    FLAT.NP2         290
+    LANDSCAPE.NP2    274
+    MONOCHROME.NP2   244
+    NEUTRAL.NP2      262
+    PORTRAIT.NP2     268
+    STANDARD.NP2     262
+    VIVID.NP2        286
+NP3: 28 个, 大小集合=[248, 284, 302, 308, 314, 326, 330, 332]
+    AUTO.NP3         332
+    BINARY.NP3       248
+    BLEACH.NP3       248
+    BLUE.NP3         248
+    CARBON.NP3       248
+    CHARCOAL.NP3     248
+    DENIM.NP3        248
+    DRAMA.NP3        248
+    DREAM.NP3        248
+    FLAT.NP3         330
+    GRAPHITE.NP3     248
+    LANDSCAPE.NP3    314
+    MELANCHOLIC.NP3  248
+    MONOCHROME.NP3   284
+    MORNING.NP3      248
+    NEUTRAL.NP3      302
+    PINK.NP3         248
+    POP.NP3          248
+    PORTRAIT.NP3     308
+    PURE.NP3         248
+    RED.NP3          248
+    SEPIA.NP3        248
+    SILENCE.NP3      248
+    SOMBER.NP3       248
+    STANDARD.NP3     302
+    SUNDAY.NP3       248
+    TOY.NP3          248
+    VIVID.NP3        326
+
+### NCP 六个
+LANDSCAPE.NCP    ver=0100 curve=04 c7 flag=0 unk39=FF sliders=84 80 80 80 80 FF FF FF tail=00 00 00 00
+MONOCHROME.NCP   ver=0100 curve=06 4d flag=0 unk39=FF sliders=83 80 80 FF FF 80 80 FF tail=00 00 00 00
+NEUTRAL.NCP      ver=0100 curve=03 c2 flag=0 unk39=FF sliders=82 80 80 80 80 FF FF FF tail=00 00 00 00
+PORTRAIT.NCP     ver=0100 curve=04 86 flag=0 unk39=FF sliders=82 80 80 80 80 FF FF FF tail=00 00 00 00
+STANDARD.NCP     ver=0100 curve=00 01 flag=0 unk39=FF sliders=83 80 80 80 80 FF FF FF tail=00 00 00 00
+VIVID.NCP        ver=0100 curve=00 c3 flag=0 unk39=FF sliders=84 80 80 80 80 FF FF FF tail=00 00 00 00
+
+### TLV 结构
+---- NP2
+AUTO.NP2         size=292 consumed=288 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+FLAT.NP2         size=290 consumed=286 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+LANDSCAPE.NP2    size=274 consumed=270 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+MONOCHROME.NP2   size=244 consumed=240 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+NEUTRAL.NP2      size=262 consumed=258 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+PORTRAIT.NP2     size=268 consumed=264 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+STANDARD.NP2     size=262 consumed=258 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+VIVID.NP2        size=286 consumed=282 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 10100
+---- NP3
+AUTO.NP3         size=332 consumed=328 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+BINARY.NP3       size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+BLEACH.NP3       size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+BLUE.NP3         size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+CARBON.NP3       size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+CHARCOAL.NP3     size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+DENIM.NP3        size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+DRAMA.NP3        size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+DREAM.NP3        size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+FLAT.NP3         size=330 consumed=326 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+GRAPHITE.NP3     size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+LANDSCAPE.NP3    size=314 consumed=310 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+MELANCHOLIC.NP3  size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+MONOCHROME.NP3   size=284 consumed=280 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+MORNING.NP3      size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+NEUTRAL.NP3      size=302 consumed=298 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+PINK.NP3         size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+POP.NP3          size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+PORTRAIT.NP3     size=308 consumed=304 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+PURE.NP3         size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+RED.NP3          size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+SEPIA.NP3        size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+SILENCE.NP3      size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+SOMBER.NP3       size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+STANDARD.NP3     size=302 consumed=298 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+SUNDAY.NP3       size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+TOY.NP3          size=248 consumed=244 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600
+VIVID.NP3        size=326 consumed=322 leftover=4 types=0100 0200 0300 0400 0500 0600 0700 0800 0900 0A00 0B00 0C00 0D00 0E00 0F00 1000 1100 1200 1300 1400 1500 1600 10100
+
+### 每个 TLV 文件的详细记录
+========= NP2
+--- AUTO.NP2 (292 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='AUTO'
+    type=00000300 len=2  [02 CF]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [FF 04]
+    type=00000700 len=2  [FF 04]
+    type=00000800 len=2  [FF 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [80 01]
+    type=00001000 len=2  [80 01]
+    type=00001100 len=2  [80 01]
+    type=00001200 len=2  [80 01]
+    type=00010100 len=76  TEXT='从“标准”优化校准开始，照相机自动调节色相和色调。'
+--- FLAT.NP2 (290 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='FLAT'
+    type=00000300 len=2  [02 8E]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [84 04]
+    type=00000700 len=2  [80 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=74  TEXT='保留各种色调范围内的细节，包括从加亮显示到阴影。'
+--- LANDSCAPE.NP2 (274 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='LANDSCAPE'
+    type=00000300 len=2  [04 C7]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=58  TEXT='用于获得生动的自然风景和城市风景照片。'
+--- MONOCHROME.NP2 (244 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='MONOCHROME'
+    type=00000300 len=2  [06 4D]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [80 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=28  TEXT='将照片转换为单色。'
+--- NEUTRAL.NP2 (262 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='NEUTRAL'
+    type=00000300 len=2  [03 C2]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [80 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=46  TEXT='进行最少处理，以获得自然效果。'
+--- PORTRAIT.NP2 (268 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='PORTRAIT'
+    type=00000300 len=2  [04 86]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [80 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=52  TEXT='用于制作肤色柔和、自然的人像照片。'
+--- STANDARD.NP2 (262 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='STANDARD'
+    type=00000300 len=2  [00 01]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=46  TEXT='进行标准处理，以获得均衡效果。'
+--- VIVID.NP2 (286 bytes)
+    type=00000100 len=4  '0210'
+    type=00000200 len=20  TEXT='VIVID'
+    type=00000300 len=2  [00 C3]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00010100 len=70  TEXT='对照片进行增强处理，以获得鲜艳的照片打印效果。'
+========= NP3
+--- AUTO.NP3 (332 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='AUTO'
+    type=00000300 len=2  [02 CF]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [FF 04]
+    type=00000700 len=2  [FF 04]
+    type=00000800 len=2  [FF 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [80 01]
+    type=00001000 len=2  [80 01]
+    type=00001100 len=2  [80 01]
+    type=00001200 len=2  [80 01]
+    type=00001300 len=2  [80 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [FF 04]
+    type=00010100 len=76  TEXT='从“标准”优化校准开始，照相机自动调节色相和色调。'
+--- BINARY.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='BINARY'
+    type=00000300 len=2  [08 13]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [80 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- BLEACH.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='BLEACH'
+    type=00000300 len=2  [08 08]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- BLUE.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='BLUE'
+    type=00000300 len=2  [08 0E]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [90 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [85 0A]
+    type=00001600 len=2  [88 04]
+--- CARBON.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='CARBON'
+    type=00000300 len=2  [08 14]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [80 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- CHARCOAL.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='CHARCOAL'
+    type=00000300 len=2  [08 11]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [82 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [80 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [84 04]
+--- DENIM.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='DENIM'
+    type=00000300 len=2  [08 0B]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- DRAMA.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='DRAMA'
+    type=00000300 len=2  [08 06]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- DREAM.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='DREAM'
+    type=00000300 len=2  [08 01]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [7E 04]
+    type=00000700 len=2  [7C 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [7C 04]
+--- FLAT.NP3 (330 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='FLAT'
+    type=00000300 len=2  [02 8E]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [84 04]
+    type=00000700 len=2  [80 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [80 04]
+    type=00010100 len=74  TEXT='保留各种色调范围内的细节，包括从加亮显示到阴影。'
+--- GRAPHITE.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='GRAPHITE'
+    type=00000300 len=2  [08 12]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [80 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- LANDSCAPE.NP3 (314 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='LANDSCAPE'
+    type=00000300 len=2  [04 C7]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [88 04]
+    type=00010100 len=58  TEXT='用于获得生动的自然风景和城市风景照片。'
+--- MELANCHOLIC.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='MELANCHOLIC'
+    type=00000300 len=2  [08 09]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [82 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [84 04]
+--- MONOCHROME.NP3 (284 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='MONOCHROME'
+    type=00000300 len=2  [06 4D]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [80 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [88 04]
+    type=00010100 len=28  TEXT='将照片转换为单色。'
+--- MORNING.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='MORNING'
+    type=00000300 len=2  [08 02]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [82 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [84 04]
+--- NEUTRAL.NP3 (302 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='NEUTRAL'
+    type=00000300 len=2  [03 C2]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [82 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [84 04]
+    type=00010100 len=46  TEXT='进行最少处理，以获得自然效果。'
+--- PINK.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='PINK'
+    type=00000300 len=2  [08 10]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [90 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [85 0A]
+    type=00001600 len=2  [88 04]
+--- POP.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='POP'
+    type=00000300 len=2  [08 03]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- PORTRAIT.NP3 (308 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='PORTRAIT'
+    type=00000300 len=2  [04 86]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [80 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [80 04]
+    type=00010100 len=52  TEXT='用于制作肤色柔和、自然的人像照片。'
+--- PURE.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='PURE'
+    type=00000300 len=2  [08 0A]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [82 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [84 04]
+--- RED.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='RED'
+    type=00000300 len=2  [08 0F]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [90 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [85 0A]
+    type=00001600 len=2  [88 04]
+--- SEPIA.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='SEPIA'
+    type=00000300 len=2  [08 0D]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [FF 04]
+    type=00000B00 len=2  [FF 04]
+    type=00000C00 len=2  [80 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [90 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [85 0A]
+    type=00001600 len=2  [88 04]
+--- SILENCE.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='SILENCE'
+    type=00000300 len=2  [08 07]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [88 04]
+    type=00000700 len=2  [82 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [84 04]
+--- SOMBER.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='SOMBER'
+    type=00000300 len=2  [08 05]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- STANDARD.NP3 (302 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='STANDARD'
+    type=00000300 len=2  [00 01]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [88 04]
+    type=00010100 len=46  TEXT='进行标准处理，以获得均衡效果。'
+--- SUNDAY.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='SUNDAY'
+    type=00000300 len=2  [08 04]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- TOY.NP3 (248 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='TOY'
+    type=00000300 len=2  [08 0C]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [8C 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [FF 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [8A 0A]
+    type=00001600 len=2  [88 04]
+--- VIVID.NP3 (326 bytes)
+    type=00000100 len=4  '0300'
+    type=00000200 len=20  TEXT='VIVID'
+    type=00000300 len=2  [00 C3]
+    type=00000400 len=2  [00 00]
+    type=00000500 len=2  [FF 01]
+    type=00000600 len=2  [90 04]
+    type=00000700 len=2  [84 04]
+    type=00000800 len=2  [80 04]
+    type=00000900 len=2  [80 04]
+    type=00000A00 len=2  [80 04]
+    type=00000B00 len=2  [80 04]
+    type=00000C00 len=2  [FF 00]
+    type=00000D00 len=2  [FF 00]
+    type=00000E00 len=2  [FF 04]
+    type=00000F00 len=2  [FF 01]
+    type=00001000 len=2  [FF 01]
+    type=00001100 len=2  [FF 01]
+    type=00001200 len=2  [FF 01]
+    type=00001300 len=2  [FF 01]
+    type=00001400 len=2  [80 01]
+    type=00001500 len=2  [FF 0A]
+    type=00001600 len=2  [88 04]
+    type=00010100 len=70  TEXT='对照片进行增强处理，以获得鲜艳的照片打印效果。'
