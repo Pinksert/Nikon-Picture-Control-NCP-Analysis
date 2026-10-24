@@ -1,0 +1,152 @@
+[
+ {
+  "name": "STANDARD",
+  "sat_ratio": 1.046529038233043,
+  "hue_shift_deg": -0.5270424311756341
+ },
+ {
+  "name": "NEUTRAL",
+  "sat_ratio": 0.9548956105178225,
+  "hue_shift_deg": -0.2095408364097107
+ },
+ {
+  "name": "VIVID",
+  "sat_ratio": 1.2962809219876563,
+  "hue_shift_deg": 1.7671592255029316
+ },
+ {
+  "name": "MONOCHROME",
+  "sat_ratio": NaN,
+  "hue_shift_deg": NaN
+ },
+ {
+  "name": "FLAT_MONOCHROME",
+  "sat_ratio": 0.2778865921373085,
+  "hue_shift_deg": -12.329501364510078
+ },
+ {
+  "name": "DEEPTONE_MONOCHROME",
+  "sat_ratio": 0.33710802662238826,
+  "hue_shift_deg": -13.149212830007782
+ },
+ {
+  "name": "RICH_TONE_PORTRAIT",
+  "sat_ratio": 1.0027462933686118,
+  "hue_shift_deg": 0.8974736281245822
+ },
+ {
+  "name": "LANDSCAPE",
+  "sat_ratio": 1.2328334974285189,
+  "hue_shift_deg": 0.897559763210315
+ },
+ {
+  "name": "FLAT",
+  "sat_ratio": 0.8271095572247008,
+  "hue_shift_deg": -0.6625517429275106
+ },
+ {
+  "name": "FLEXIBLE_COLOR",
+  "sat_ratio": 0.8482879140105486,
+  "hue_shift_deg": -1.363399073232868
+ },
+ {
+  "name": "DREAM",
+  "sat_ratio": 0.8725636636185932,
+  "hue_shift_deg": 5.544254489081328
+ },
+ {
+  "name": "MORNING",
+  "sat_ratio": 1.0381761418761928,
+  "hue_shift_deg": 6.2490666833376824
+ },
+ {
+  "name": "POP",
+  "sat_ratio": 1.334368311856042,
+  "hue_shift_deg": -1.6646150414808447
+ },
+ {
+  "name": "SUNDAY",
+  "sat_ratio": 1.0222120045537264,
+  "hue_shift_deg": -0.5683248264954207
+ },
+ {
+  "name": "SOMBER",
+  "sat_ratio": 1.4643635645859494,
+  "hue_shift_deg": 0.8668710197333498
+ },
+ {
+  "name": "DRAMA",
+  "sat_ratio": 0.4193445308162302,
+  "hue_shift_deg": 0.2978169072285175
+ },
+ {
+  "name": "SILENCE",
+  "sat_ratio": 0.31575225319374967,
+  "hue_shift_deg": 0.5243587994899181
+ },
+ {
+  "name": "BLEACH",
+  "sat_ratio": 0.5151040063100826,
+  "hue_shift_deg": -1.4118005305089258
+ },
+ {
+  "name": "MELANCHOLIC",
+  "sat_ratio": 0.6322022526989962,
+  "hue_shift_deg": -1.3105912241176403
+ },
+ {
+  "name": "PURE",
+  "sat_ratio": 0.7992108560811078,
+  "hue_shift_deg": -0.6362337535125092
+ },
+ {
+  "name": "DENIM",
+  "sat_ratio": 1.6497961540010153,
+  "hue_shift_deg": -3.501406993775824
+ },
+ {
+  "name": "TOY",
+  "sat_ratio": 1.5054876720291908,
+  "hue_shift_deg": 26.2639285016791
+ },
+ {
+  "name": "SEPIA",
+  "sat_ratio": 0.9630526454968317,
+  "hue_shift_deg": 2.5276638709528263
+ },
+ {
+  "name": "BLUE",
+  "sat_ratio": 0.8036033709689149,
+  "hue_shift_deg": 18.808971856944368
+ },
+ {
+  "name": "RED",
+  "sat_ratio": 1.3961962422862877,
+  "hue_shift_deg": 2.847517837788623
+ },
+ {
+  "name": "PINK",
+  "sat_ratio": 1.1124151502711142,
+  "hue_shift_deg": -6.538006400521194
+ },
+ {
+  "name": "CHARCOAL",
+  "sat_ratio": 0.2590475216707874,
+  "hue_shift_deg": -12.397106056480208
+ },
+ {
+  "name": "GRAPHITE",
+  "sat_ratio": 0.33759976676783365,
+  "hue_shift_deg": -13.779962821311278
+ },
+ {
+  "name": "BINARY",
+  "sat_ratio": 0.25357603989736494,
+  "hue_shift_deg": -28.726748581079487
+ },
+ {
+  "name": "CARBON",
+  "sat_ratio": 0.406567541476797,
+  "hue_shift_deg": -13.222859911729568
+ }
+]
