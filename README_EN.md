@@ -238,14 +238,81 @@ python make_curve_batch.py <jpg dir> [out dir]
 python verify_curve.py <standard.jpg> <target.jpg> <lut.json>
 ```
 
-## 8. Still open
+## 8. Solved
+
+In order of discovery; every item rests on measurements made on real files
+or exported images.
+
+1. **Container differences across the three generations** — magic, version
+   strings, TLV card chain, record type/length; derived from comparing all
+   42 factory presets.
+2. **NP2/NP3 → NCP parameter mapping** — 8 slider slots × 6 presets × 2
+   formats = **96 bytes hit**; 6 presets rebuilt **byte-identical (52/52)**
+   to Nikon's own files.
+3. **Base curve id system** — NCP knows only six; flat, auto and the 20
+   creative ids have no counterpart. This, not an uncracked format, is why
+   creative presets cannot be ported: the curves live in firmware.
+4. **Mono filter and toning enums** — cross-checked against public
+   reverse-engineering docs.
+5. **638-byte layout of curve-carrying NCP** — 64-byte header + 257 × uint16
+   LUT, confirmed by rebuilding a real export byte for byte.
+6. **Header control point encoding** — byte 8 is the point count, points
+   start at byte 9 as (x, y); confirmed by diffing two exports with
+   different curves.
+7. **Curve corruption from changing the LUT but not the control points** —
+   Nikon's software reads the control points. Fix: write the same curve into
+   both, and use the full 20 points so interpolation error becomes
+   negligible (0.6–14.6 / 32767).
+8. **Curve not tuned for the old body** — the first measurement used
+   "latest-system standard → latest-system portrait", but the NCP runs on the
+   old pipeline, so the LUT landed on a different base. Fix: take the
+   reference export from **[camera compatible] + STANDARD**.
+9. **Nikon's spline is unknown** — a tension-parameterised Catmull-Rom fit
+   failed (best parameter 1.20 vs 0.98 on two samples). Fix: stop guessing
+   the algorithm, use a **black-box loop** — export, measure residual, nudge
+   the control points. One round converged: luma residual 9.48 → **2.02**,
+   and **2.01** on a second photo that never took part in calibration, so the
+   curve generalises rather than overfits.
+
+Final numbers for the portrait preset:
+
+| | before | v2 | v3 | target |
+|---|---|---|---|---|
+| mean luma | 89.46 | 86.12 | **95.53** | 95.51 |
+| per-pixel luma diff | 6.49 | 9.48 | **2.02** | — |
+
+## 9. Still open and not verified
+
+**Open (format level)**
 
 * Purpose of header bytes `0..7`, especially `49 30` — not XMODEM/CCITT/
   MODBUS/Kermit CRC16, not a plain sum.
-* Nikon's exact spline between control points.
+* Nikon's exact spline between control points (cracking it was abandoned in
+  favour of the black-box loop).
 * `PINK` toning colour — assumed 9 (red-purple), unconfirmed;
   SEPIA/BLUE/RED are confirmed.
 * Semantics of NP3 cards `0x1300`, `0x1400`, `0x1600` (step code is not the
   usual `04`, so the value formula does not apply).
 * The 20 creative base curves themselves: they live in firmware, so no file
   format trick will bring them to an old body.
+
+**Open (hard limits of the approach)**
+
+* **Colour cannot be reproduced.** The UDC is a luminosity-only 1D table;
+  a preset's colour work is cross-channel. Measured on portrait: a\* diff
+  2.07, b\* diff 2.60, skin tones yellower than the target (b\* 3.93 vs
+  3.42). This is the ceiling of the method, not a calibration miss.
+* **Clarity, quick sharpening and other new parameters** have no slot in NCP
+  and must be dropped.
+
+**Not verified**
+
+* **Everything so far was verified inside Nikon's desktop software, never on
+  an actual D300.** The memory-card `NIKON\CUSTOMPC` route plus in-camera
+  load has not been exercised, so whether the body treats control points and
+  LUT the same way is unconfirmed.
+* Only **portrait** has been through the full pipeline; the other 27 presets
+  have not been done.
+* Calibration used two photos. Generalisation was checked on a second image,
+  but extreme scenes (very high contrast, night shots, large flat colour
+  areas) are untested.
