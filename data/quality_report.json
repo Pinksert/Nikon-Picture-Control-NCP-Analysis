@@ -1,0 +1,272 @@
+[
+ {
+  "name": "STANDARD",
+  "luma_before": 4.379392651821649,
+  "luma_after": 2.5514541409179112,
+  "luma_gain": 41.739543727447916,
+  "chroma_before": 2.094081536826313,
+  "chroma_after": 2.0154402538372445,
+  "chroma_gain": 3.7554069221322317
+ },
+ {
+  "name": "NEUTRAL",
+  "luma_before": 6.583401519526664,
+  "luma_after": 2.0038034102593625,
+  "luma_gain": 69.56279509435979,
+  "chroma_before": 2.5969096014950623,
+  "chroma_after": 2.8206527215265753,
+  "chroma_gain": -8.615745419197584
+ },
+ {
+  "name": "VIVID",
+  "luma_before": 7.364931847958242,
+  "luma_after": 3.1097529718976458,
+  "luma_gain": 57.776215230562464,
+  "chroma_before": 3.2029198651557635,
+  "chroma_after": 3.8430056568138595,
+  "chroma_gain": -19.98444602443925
+ },
+ {
+  "name": "MONOCHROME",
+  "luma_before": 5.7627226608355695,
+  "luma_after": 2.6314667836089285,
+  "luma_gain": 54.33639724686357,
+  "chroma_before": 12.724896791094931,
+  "chroma_after": 12.175644600591,
+  "chroma_gain": 4.31635870625141
+ },
+ {
+  "name": "FLAT_MONOCHROME",
+  "luma_before": 7.186758699480127,
+  "luma_after": 1.8533983392052595,
+  "luma_gain": 74.21092850467723,
+  "chroma_before": 11.062546700024495,
+  "chroma_after": 12.150468558617705,
+  "chroma_gain": -9.83428037045757
+ },
+ {
+  "name": "DEEPTONE_MONOCHROME",
+  "luma_before": 16.04779032444868,
+  "luma_after": 12.559470145002159,
+  "luma_gain": 21.737074755594822,
+  "chroma_before": 11.022962165454723,
+  "chroma_after": 10.017969088147622,
+  "chroma_gain": 9.11726868170416
+ },
+ {
+  "name": "RICH_TONE_PORTRAIT",
+  "luma_before": 4.418374480389485,
+  "luma_after": 2.3336900668684795,
+  "luma_gain": 47.1821576639479,
+  "chroma_before": 2.3497903845704666,
+  "chroma_after": 2.299421256210931,
+  "chroma_gain": 2.1435583654727974
+ },
+ {
+  "name": "LANDSCAPE",
+  "luma_before": 8.176610129129632,
+  "luma_after": 3.003073259730754,
+  "luma_gain": 63.27239268713403,
+  "chroma_before": 2.6800992732257334,
+  "chroma_after": 3.2769275333141654,
+  "chroma_gain": -22.268886307711178
+ },
+ {
+  "name": "FLAT",
+  "luma_before": 12.583238365755493,
+  "luma_after": 1.9800222067128361,
+  "luma_gain": 84.26460542858868,
+  "chroma_before": 3.0633659716141963,
+  "chroma_after": 4.2275807021889795,
+  "chroma_gain": -38.00442850650707
+ },
+ {
+  "name": "FLEXIBLE_COLOR",
+  "luma_before": 11.732667743533037,
+  "luma_after": 2.1235345067401568,
+  "luma_gain": 81.90066783480991,
+  "chroma_before": 3.0419414398116182,
+  "chroma_after": 3.6917108294956194,
+  "chroma_gain": -21.360351687908885
+ },
+ {
+  "name": "DREAM",
+  "luma_before": 32.45971817693485,
+  "luma_after": 2.5315252446948997,
+  "luma_gain": 92.20102518790891,
+  "chroma_before": 6.166889441371788,
+  "chroma_after": 6.750371978273077,
+  "chroma_gain": -9.4615371728068
+ },
+ {
+  "name": "MORNING",
+  "luma_before": 20.82960180042554,
+  "luma_after": 2.1898053479929662,
+  "luma_gain": 89.48705131776342,
+  "chroma_before": 7.528491623688931,
+  "chroma_after": 6.73231458753184,
+  "chroma_gain": 10.575518655714033
+ },
+ {
+  "name": "POP",
+  "luma_before": 10.294663799157302,
+  "luma_after": 3.458705012290585,
+  "luma_gain": 66.40293379397482,
+  "chroma_before": 6.149932528230271,
+  "chroma_after": 5.224811907296181,
+  "chroma_gain": 15.042776757102184
+ },
+ {
+  "name": "SUNDAY",
+  "luma_before": 16.77705717130639,
+  "luma_after": 2.995765198485685,
+  "luma_gain": 82.14367890687463,
+  "chroma_before": 2.970550769142798,
+  "chroma_after": 2.3552310120862523,
+  "chroma_gain": 20.713995648494056
+ },
+ {
+  "name": "SOMBER",
+  "luma_before": 19.610372131791884,
+  "luma_after": 3.3286202795938893,
+  "luma_gain": 83.02622582976073,
+  "chroma_before": 3.7915606305895317,
+  "chroma_after": 4.630781706811126,
+  "chroma_gain": -22.133922096640912
+ },
+ {
+  "name": "DRAMA",
+  "luma_before": 25.975651494371537,
+  "luma_after": 3.723004354568541,
+  "luma_gain": 85.6673302096956,
+  "chroma_before": 8.951252114065792,
+  "chroma_after": 6.177653585128143,
+  "chroma_gain": 30.985592781810713
+ },
+ {
+  "name": "SILENCE",
+  "luma_before": 8.20073563668665,
+  "luma_after": 2.2120845434106853,
+  "luma_gain": 73.0257791323653,
+  "chroma_before": 9.038758039035663,
+  "chroma_after": 10.235249083454212,
+  "chroma_gain": -13.237339015507054
+ },
+ {
+  "name": "BLEACH",
+  "luma_before": 17.335055386864834,
+  "luma_after": 3.3572540703617624,
+  "luma_gain": 80.63315059895551,
+  "chroma_before": 8.733063979039988,
+  "chroma_after": 7.407643516537255,
+  "chroma_gain": 15.177038272980049
+ },
+ {
+  "name": "MELANCHOLIC",
+  "luma_before": 24.92692920457404,
+  "luma_after": 1.752805444380051,
+  "luma_gain": 92.96822552832374,
+  "chroma_before": 6.917742364618571,
+  "chroma_after": 8.710202656708054,
+  "chroma_gain": -25.91105880521347
+ },
+ {
+  "name": "PURE",
+  "luma_before": 27.021583404955557,
+  "luma_after": 1.804679972384119,
+  "luma_gain": 93.32133892622608,
+  "chroma_before": 10.315830385331546,
+  "chroma_after": 9.875028325368838,
+  "chroma_gain": 4.273064246863745
+ },
+ {
+  "name": "DENIM",
+  "luma_before": 8.719102963325927,
+  "luma_after": 2.794226287681994,
+  "luma_gain": 67.95282382333367,
+  "chroma_before": 11.369532153167288,
+  "chroma_after": 11.576363978846295,
+  "chroma_gain": -1.8191762237234066
+ },
+ {
+  "name": "TOY",
+  "luma_before": 6.974029573253816,
+  "luma_after": 2.961178272582846,
+  "luma_gain": 57.53992377750596,
+  "chroma_before": 8.54985667842756,
+  "chroma_after": 8.588682463238863,
+  "chroma_gain": -0.4541103584726258
+ },
+ {
+  "name": "SEPIA",
+  "luma_before": 3.7943720091606563,
+  "luma_after": 2.5902192498473906,
+  "luma_gain": 31.735231980578348,
+  "chroma_before": 5.493497215697748,
+  "chroma_after": 5.475090771746811,
+  "chroma_gain": 0.33505876544981383
+ },
+ {
+  "name": "BLUE",
+  "luma_before": 4.179750378112946,
+  "luma_after": 2.5807774754529116,
+  "luma_gain": 38.25522478646036,
+  "chroma_before": 9.131588748892327,
+  "chroma_after": 8.970986150401794,
+  "chroma_gain": 1.758758556773743
+ },
+ {
+  "name": "RED",
+  "luma_before": 9.834149353565737,
+  "luma_after": 2.557835877343569,
+  "luma_gain": 73.99026814234695,
+  "chroma_before": 6.683812451698189,
+  "chroma_after": 6.748518203499053,
+  "chroma_gain": -0.9680964609416032
+ },
+ {
+  "name": "PINK",
+  "luma_before": 5.804522375744172,
+  "luma_after": 2.479155692463364,
+  "luma_gain": 57.28923876970114,
+  "chroma_before": 6.458560629244984,
+  "chroma_after": 6.449612580238893,
+  "chroma_gain": 0.13854556022241393
+ },
+ {
+  "name": "CHARCOAL",
+  "luma_before": 16.089915214132983,
+  "luma_after": 1.7051841356466304,
+  "luma_gain": 89.4021558662482,
+  "chroma_before": 11.134218414820067,
+  "chroma_after": 13.224870816273958,
+  "chroma_gain": -18.776822256972725
+ },
+ {
+  "name": "GRAPHITE",
+  "luma_before": 33.23374487542973,
+  "luma_after": 3.1701805339462283,
+  "luma_gain": 90.46095904680908,
+  "chroma_before": 11.33018721147315,
+  "chroma_after": 5.978580079880532,
+  "chroma_gain": 47.23317480732785
+ },
+ {
+  "name": "BINARY",
+  "luma_before": 57.30377670740398,
+  "luma_after": 3.56989210771203,
+  "luma_gain": 93.7702324125335,
+  "chroma_before": 12.574493723166706,
+  "chroma_after": 3.8684254196224312,
+  "chroma_gain": 69.23593502221557
+ },
+ {
+  "name": "CARBON",
+  "luma_before": 36.972369277995554,
+  "luma_after": 2.5159920690839654,
+  "luma_gain": 93.19493957726593,
+  "chroma_before": 11.204344370344732,
+  "chroma_after": 5.322953640836753,
+  "chroma_gain": 52.49205607313034
+ }
+]
