@@ -1,0 +1,152 @@
+[
+ {
+  "name": "STANDARD",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "NEUTRAL",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "VIVID",
+  "sat_steps": 1,
+  "hue_steps": 1
+ },
+ {
+  "name": "MONOCHROME",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "FLAT_MONOCHROME",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "DEEPTONE_MONOCHROME",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "RICH_TONE_PORTRAIT",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "LANDSCAPE",
+  "sat_steps": 1,
+  "hue_steps": 0
+ },
+ {
+  "name": "FLAT",
+  "sat_steps": -1,
+  "hue_steps": 0
+ },
+ {
+  "name": "FLEXIBLE_COLOR",
+  "sat_steps": -1,
+  "hue_steps": 0
+ },
+ {
+  "name": "DREAM",
+  "sat_steps": -1,
+  "hue_steps": 2
+ },
+ {
+  "name": "MORNING",
+  "sat_steps": 0,
+  "hue_steps": 2
+ },
+ {
+  "name": "POP",
+  "sat_steps": 1,
+  "hue_steps": 0
+ },
+ {
+  "name": "SUNDAY",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "SOMBER",
+  "sat_steps": 2,
+  "hue_steps": 0
+ },
+ {
+  "name": "DRAMA",
+  "sat_steps": -3,
+  "hue_steps": 0
+ },
+ {
+  "name": "SILENCE",
+  "sat_steps": -3,
+  "hue_steps": 0
+ },
+ {
+  "name": "BLEACH",
+  "sat_steps": -3,
+  "hue_steps": 0
+ },
+ {
+  "name": "MELANCHOLIC",
+  "sat_steps": -2,
+  "hue_steps": 0
+ },
+ {
+  "name": "PURE",
+  "sat_steps": -1,
+  "hue_steps": 0
+ },
+ {
+  "name": "DENIM",
+  "sat_steps": 2,
+  "hue_steps": -1
+ },
+ {
+  "name": "TOY",
+  "sat_steps": 2,
+  "hue_steps": 3
+ },
+ {
+  "name": "SEPIA",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "BLUE",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "RED",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "PINK",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "CHARCOAL",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "GRAPHITE",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "BINARY",
+  "sat_steps": 0,
+  "hue_steps": 0
+ },
+ {
+  "name": "CARBON",
+  "sat_steps": 0,
+  "hue_steps": 0
+ }
+]
