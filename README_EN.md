@@ -273,6 +273,18 @@ or exported images.
    the control points. One round converged: luma residual 9.48 → **2.02**,
    and **2.01** on a second photo that never took part in calibration, so the
    curve generalises rather than overfits.
+10. **Calibration of the saturation and hue sliders** — measured from four
+    calibration NCPs (saturation / hue at ±1). Under a symmetric-linear
+    assumption the ±1 ratio and difference solve it without a zero-point
+    reference: **saturation is chroma ×1.267 per step, hue is 3.46° per step**.
+    The colour demand of all 30 presets was converted into steps with that
+    (clamped to ±3).
+11. **Header offset bug found and fixed** — while correcting the sliders the
+    header was read from `b[64:128]` instead of `b[56:120]`, so the control
+    point area was overwritten with misaligned data and the software produced a
+    blocky, colour-banded image. Fixed by rebuilding the header with the same
+    `hdr_with_delta()` used by the batch path; lesson recorded — offsets always
+    go through the parser, never hand-written numbers.
 
 Final numbers for the portrait preset:
 
@@ -298,12 +310,36 @@ Final numbers for the portrait preset:
 
 **Open (hard limits of the approach)**
 
-* **Colour cannot be reproduced.** The UDC is a luminosity-only 1D table;
-  a preset's colour work is cross-channel. Measured on portrait: a\* diff
-  2.07, b\* diff 2.60, skin tones yellower than the target (b\* 3.93 vs
-  3.42). This is the ceiling of the method, not a calibration miss.
+* **Selective colour work cannot be reproduced** — this is the final verdict
+  and it is measured. Breaking DREAM's residual down by hue region
+  (`data/hue_breakdown.json`):
+
+  | hue band | share | chroma diff (target − ours) | hue shift |
+  |---|---|---|---|
+  | red | 7.1% | −10.53 | −1.5° |
+  | orange | 9.8% | −9.98 | +1.0° |
+  | yellow | 33.7% | −0.18 | −0.1° |
+  | yellow-green | 31.1% | +3.28 | −4.0° |
+  | green | 7.2% | +10.90 | −15.7° |
+
+  The difference swings hard with the hue band (−10.5 to +10.9): yellow is
+  nearly perfect while red and green go in opposite directions. That is the
+  fingerprint of **selective colour work (a colour matrix)**, and it is exactly
+  what creative presets are made of — pull red down, push green up, shift green
+  hues by a dozen degrees. Every tool a D300 can run is **global** (saturation
+  affects all colours, hue rotates all colours, the curve touches all
+  luminances), so "pull down red but leave yellow alone" cannot be expressed.
+  **This is not an uncracked format and not a calibration miss — the D300
+  processing engine simply cannot do it. It is a generational gap in hardware
+  and firmware.**
+* **Colour cannot be reproduced by a 1D luminance table** (same root cause).
 * **Clarity, quick sharpening and other new parameters** have no slot in NCP
   and must be dropped.
+* **Limits of the measurement model**: the "how much saturation is still needed"
+  figure comes from a simplified model that scales luminance and holds hue.
+  For strongly colour-shifted presets such as DREAM that model breaks down
+  (the slider was observed to move the result the wrong way). It is reliable
+  only for low-saturation and monochrome presets.
 
 **Not verified**
 
@@ -311,8 +347,23 @@ Final numbers for the portrait preset:
   an actual D300.** The memory-card `NIKON\CUSTOMPC` route plus in-camera
   load has not been exercised, so whether the body treats control points and
   LUT the same way is unconfirmed.
-* Only **portrait** has been through the full pipeline; the other 27 presets
-  have not been done.
+* Only **portrait, DREAM and SILENCE** went through the full export → residual
+  → correction loop. The other 27 presets were measured once and never
+  individually validated.
 * Calibration used two photos. Generalisation was checked on a second image,
   but extreme scenes (very high contrast, night shots, large flat colour
   areas) are untested.
+
+## 10. What this method can and cannot carry over
+
+| can carry | cannot carry |
+|---|---|
+| tone / luminance mapping (residual down to ~2/255) | selective, per-hue colour work |
+| overall saturation and hue bias (calibrated steps) | colour-matrix operations (engine generation gap) |
+| monochrome conversion and toning (filter / toning enums) | clarity, quick / mid-range sharpening |
+| base carrier (the six known ids) | the creative base curves themselves (in firmware) |
+
+**Verdict**: monochrome and toned presets (charcoal, graphite, binary, carbon,
+the monochrome family, sepia, blue, red, pink) come out close enough to use.
+Colour creative presets only get the tone right — the colour difference is
+principled, not a calibration shortfall.
