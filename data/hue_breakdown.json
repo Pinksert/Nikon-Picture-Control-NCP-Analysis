@@ -1,0 +1,83 @@
+[
+ {
+  "band": "红(345-15)",
+  "pct": 7.1,
+  "chroma_target": 27.31,
+  "chroma_ours": 37.84,
+  "chroma_diff": -10.53,
+  "hue_shift_deg": -1.46,
+  "luma_diff": -0.92
+ },
+ {
+  "band": "橙(15-45)",
+  "pct": 9.8,
+  "chroma_target": 10.35,
+  "chroma_ours": 20.33,
+  "chroma_diff": -9.98,
+  "hue_shift_deg": 1.04,
+  "luma_diff": -1.92
+ },
+ {
+  "band": "黄(45-75)",
+  "pct": 33.7,
+  "chroma_target": 14.21,
+  "chroma_ours": 14.39,
+  "chroma_diff": -0.18,
+  "hue_shift_deg": -0.05,
+  "luma_diff": -11.6
+ },
+ {
+  "band": "黄绿(75-105)",
+  "pct": 31.1,
+  "chroma_target": 18.36,
+  "chroma_ours": 15.07,
+  "chroma_diff": 3.28,
+  "hue_shift_deg": -4.0,
+  "luma_diff": -12.17
+ },
+ {
+  "band": "绿(105-150)",
+  "pct": 7.2,
+  "chroma_target": 23.55,
+  "chroma_ours": 12.65,
+  "chroma_diff": 10.9,
+  "hue_shift_deg": -15.72,
+  "luma_diff": 4.61
+ },
+ {
+  "band": "青(150-195)",
+  "pct": 0.1,
+  "chroma_target": 2.39,
+  "chroma_ours": 3.79,
+  "chroma_diff": -1.4,
+  "hue_shift_deg": 26.04,
+  "luma_diff": 12.04
+ },
+ {
+  "band": "蓝(195-255)",
+  "pct": 0.2,
+  "chroma_target": 5.68,
+  "chroma_ours": 3.8,
+  "chroma_diff": 1.88,
+  "hue_shift_deg": 4.53,
+  "luma_diff": 33.58
+ },
+ {
+  "band": "紫(255-300)",
+  "pct": 5.2,
+  "chroma_target": 4.86,
+  "chroma_ours": 6.89,
+  "chroma_diff": -2.04,
+  "hue_shift_deg": 10.1,
+  "luma_diff": 30.18
+ },
+ {
+  "band": "品红(300-345)",
+  "pct": 5.6,
+  "chroma_target": 6.5,
+  "chroma_ours": 3.57,
+  "chroma_diff": 2.93,
+  "hue_shift_deg": -0.18,
+  "luma_diff": 30.47
+ }
+]
