@@ -367,3 +367,17 @@ Final numbers for the portrait preset:
 the monochrome family, sepia, blue, red, pink) come out close enough to use.
 Colour creative presets only get the tone right — the colour difference is
 principled, not a calibration shortfall.
+
+---
+
+## 11. Real-camera follow-up (D300)
+
+[d300/README.md](d300/README.md) documents pushing this method onto real hardware, including
+**corrections to the analysis above**: the in-camera path is `A:/NIKON/CUSTOMPC/PICCON%02d.NCP`
+(no root-directory scan in firmware); the name field is ASCII 20 bytes (not UTF-16BE, which is why
+`np2ncp.py` emits `????`); the description card is UTF-8; the monochrome toning enumeration is
+`FF 00` ("n/a") in source files and cannot be recovered from data; the LUT need not be monotonic.
+
+It also resolves the open "curve header 8 bytes" question (identical across 35 files with very
+different curves → a fixed tag, not a checksum), and documents a **fixed pre-curve transform H**
+in the NX Studio "compatible with camera" engine (`out = C(H(x))`, −18 in the midtones).
