@@ -4,12 +4,14 @@ ncp_d300.py —— 把尼康新版优化校准（.NP2 / .NP3）做成 D300 能�
 
 为什么需要它
 ------------
-D300 只认 .NCP（52 字节 / 638 字节两种），且只认六个底子编号：
-    0001 标准   03C2 中性   00C3 鲜艳
-    0486 人像   04C7 风景   064D 单色
-新机型的 20 个「创意优化校准」用的是 0801–0814 底子，曲线在固件里，导不出来。
+D300 只认 .NCP（52 字节 / 638 字节两种），且底子编号只有四个（= 机身的 PicCtrlItem）：
+    0001 标准   0002 中性   0003 鲜艳   0004 单色
+新系统（NP2/NP3）那套 03C2 中性 / 00C3 鲜艳 / 0486 人像 / 04C7 风景 / 064D 单色
+是四位码，**D300 一个都不认** —— 真机实测：底子 064D 的文件在机身「载入」列表里
+根本不出现。所以只能用 1/2/3/4，本工具实际只用到 1（彩色）和 4（黑白·调色）。
+新机型的 20 个「创意优化校准」曲线在固件里，导不出来。
 唯一能搬的是**影调**：NCP 支持一条用户自定义曲线（UDC，257 点一维亮度 LUT），
-作用在 sRGB 伽马之后。所以策略是「六个已知底子里挑一个 + 挂一条实测 LUT」。
+作用在 sRGB 伽马之后。所以策略是「1 或 4 底子 + 挂一条实测 LUT」。
 
 与流传脚本的区别（重要）
 ------------------------
@@ -44,11 +46,21 @@ REC2_LEN = HDR_LEN + 257 * 2
 HDR_PREFIX = bytes.fromhex('493000FF00FF0100')   # 固定标识，不是校验和
 MAX_PTS = 20
 
-# D300 认得的六个底子
+# D300 认得的四个底子（编号 = 机身的 PicCtrlItem）
+# 权威依据是 D300 SDK §6.4.1「Format of the Picture Control Data」：
+#   PicCtrlItem: 1: Standard, 2: Neutral, 3: Vivid, 4: Monochrome,
+#                101–199: Option（自定义位填「所依据的底子」）
+# 也见 §5.5.14.1 ActivePicCtrlItem 的枚举。
+# ⚠️ 新系统（NP2/NP3）用的是 0x03C2 中性 / 0x00C3 鲜艳 / 0x0486 人像 /
+#    0x04C7 风景 / 0x064D 单色 这类四位码，**D300 一个都不认**。
+#    真机实测：底子 0x064D 的 7 个文件在机身「载入」列表里全部不出现，
+#    底子 0x0001 的 4 个正常显示。所以给 D300 生成文件只能用 1/2/3/4。
 BASES = {
-    0x0001: '标准', 0x03C2: '中性', 0x00C3: '鲜艳',
-    0x0486: '人像', 0x04C7: '风景', 0x064D: '单色',
+    0x0001: '标准', 0x0002: '中性', 0x0003: '鲜艳', 0x0004: '单色',
 }
+# 仅用于读新系统文件时显示名字，绝不用于生成
+NEW_SYS_BASES = {0x03C2: '中性', 0x00C3: '鲜艳', 0x0486: '人像',
+                 0x04C7: '风景', 0x064D: '单色'}
 
 # 单色「调色」枚举（与 D300 菜单顺序一致，已对说明书核对）
 TONE_BW, TONE_SEPIA, TONE_CYANO, TONE_RED, TONE_YELLOW = 0, 1, 2, 3, 4
@@ -207,7 +219,7 @@ def header_from_lut(lut, npts=MAX_PTS):
 
 def build_ncp(name, base, sliders, lut=None):
     """生成 .NCP。lut 为 None -> 52 字节；否则 638 字节。"""
-    assert base in BASES, '底子 %04X 不在 D300 认得的六个里' % base
+    assert base in BASES, '底子 %04X 不在 D300 认得的四个里（1/2/3/4）' % base
     nb = name.upper().encode('ascii', 'replace')[:20]
     assert len(nb) <= 20
 
@@ -265,7 +277,7 @@ TONING = {'SEPIA': TONE_SEPIA, 'BLUE': TONE_BLUE, 'RED': TONE_RED, 'PINK': TONE_
 PURE_MONO = {'CHARCOAL', 'GRAPHITE', 'BINARY', 'CARBON',
              'MONOCHROME', 'FLAT_MONOCHROME', 'DEEPTONE_MONOCHROME'}
 
-# D300 机身自带的六个，不必再导
+# D300 机身自带的，不必再导（无曲线时）
 BUILTIN = {'STANDARD', 'NEUTRAL', 'VIVID', 'PORTRAIT', 'LANDSCAPE', 'MONOCHROME'}
 
 # 转了没意义的
@@ -277,8 +289,8 @@ SKIP_REASON = {
 # 底子选择：LUT 是「标准 -> 目标」测的，所以彩色一律 0001；单色必须 064D
 def pick_base(name):
     if name in TONING or name in PURE_MONO:
-        return 0x064D
-    return 0x0001
+        return 0x0004                     # D300 的「单色」，不是新系统的 0x064D
+    return 0x0001                         # 标准
 
 
 def sliders_for(name, vals, has_curve):
@@ -295,8 +307,6 @@ def sliders_for(name, vals, has_curve):
 
     sat = vals.get('saturation')
     hue = vals.get('hue')
-    sat_b = SL_ZERO if sat is None else slider_byte(sat, 'saturation')
-    hue_b = SL_ZERO if hue is None else slider_byte(hue, 'hue')
 
     # 单色三项
     if name in TONING:
@@ -305,6 +315,15 @@ def sliders_for(name, vals, has_curve):
         filt_b, tone_b, str_b = SL_ZERO, SL_ZERO + TONE_BW, SL_NA
     else:
         filt_b = tone_b = str_b = SL_NA       # 彩色底子：不适用
+
+    # 单色底子上没有「饱和度 / 色相」这两档，必须写「不适用」0xFF。
+    # 原厂 MONOCHROME.NCP 的八滑块是 83 80 80 FF FF 80 80 FF —— 正是这么写的。
+    # 之前误写成 0x80（数值 0），与底子矛盾。
+    if name in TONING or name in PURE_MONO:
+        sat_b = hue_b = SL_NA
+    else:
+        sat_b = SL_ZERO if sat is None else slider_byte(sat, 'saturation')
+        hue_b = SL_ZERO if hue is None else slider_byte(hue, 'hue')
 
     return [sharp_b, contrast_b, bright_b, sat_b, hue_b, filt_b, tone_b, str_b]
 
@@ -343,11 +362,21 @@ def verify_one(path):
 
     base = struct.unpack('>H', d1[24:26])[0]
     if base not in BASES:
-        bad.append('底子 %04X 不在 D300 认得的六个里' % base)
+        if base in NEW_SYS_BASES:
+            bad.append('底子 %04X 是新系统的「%s」码，D300 不认（机身列表里根本不会出现），'
+                       '必须改成 D300 的 1/2/3/4' % (base, NEW_SYS_BASES[base]))
+        else:
+            bad.append('底子 %04X 不在 D300 认得的四个里（1 标准 / 2 中性 / 3 鲜艳 / 4 单色）' % base)
     if d1[27] != 0xFF:
         bad.append('未知位不是 FF')
 
     sl = list(d1[28:36])
+    # 底子与滑块必须自洽：单色没有饱和度/色相，彩色没有滤镜/调色/强度
+    mono = base == 0x0004
+    if mono and (sl[3] != SL_NA or sl[4] != SL_NA):
+        bad.append('单色底子却给了饱和度 %02X / 色相 %02X，应为 FF FF（不适用）' % (sl[3], sl[4]))
+    if not mono and (sl[5] != SL_NA or sl[6] != SL_NA):
+        bad.append('彩色底子却给了滤镜 %02X / 调色 %02X，应为 FF FF（不适用）' % (sl[5], sl[6]))
     ok_vals = set(range(0x80 - 3, 0x80 + 4)) | {SL_AUTO, SL_CURVE, SL_NA}
     if sl[0] not in set(range(0x80, 0x8A)) | {SL_AUTO, SL_NA}:
         bad.append('锐化 %02X 越界（0..9 或 A/—）' % sl[0])
@@ -471,7 +500,7 @@ def cmd_build(argv):
         if p is None and lut is None:
             continue
         vals = preset_from_np(open(p, 'rb').read())[2] if p else {}
-        # D300 机身自带这六个，再导一份没曲线的进去毫无意义
+        # D300 机身自带这些，再导一份没曲线的进去毫无意义
         if name in BUILTIN and lut is None:
             skipped.append('%s（机身自带）' % name)
             continue
