@@ -343,10 +343,11 @@ Final numbers for the portrait preset:
 
 **Not verified**
 
-* **Everything so far was verified inside Nikon's desktop software, never on
-  an actual D300.** The memory-card `NIKON\CUSTOMPC` route plus in-camera
-  load has not been exercised, so whether the body treats control points and
-  LUT the same way is unconfirmed.
+* ~~Everything so far was verified inside Nikon's desktop software, never on
+  an actual D300.~~ **It now runs on the body** (see section 11 and `d300/`):
+  card → in-camera load → shooting → pixel-level comparison, 29 frames over
+  three rounds. The body does treat control points and LUT the same way, and
+  **the firmware applies the same pre-curve transform H as the desktop engine**.
 * Only **portrait, DREAM and SILENCE** went through the full export → residual
   → correction loop. The other 27 presets were measured once and never
   individually validated.
@@ -381,3 +382,23 @@ principled, not a calibration shortfall.
 It also resolves the open "curve header 8 bytes" question (identical across 35 files with very
 different curves → a fixed tag, not a checksum), and documents a **fixed pre-curve transform H**
 in the NX Studio "compatible with camera" engine (`out = C(H(x))`, −18 in the midtones).
+
+**Three findings that only showed up on the body** (full data:
+[d300/docs/07-camera-verification.md](d300/docs/07-camera-verification.md)):
+
+* **Base id must match the slider type**: `0x0001` for colour, `0x064D` for monochrome
+  (saturation/hue = `FF FF`). `0x0002/0x0003/0x0004` and the new-system four-digit ids
+  are silently dropped from the in-camera load list — individually skipped, not fatal to
+  the rest of the card.
+* **A single flag decides whether the stored curve is used at all**: bytes `[41][42]` of the
+  eight sliders must be `01 01` in any 638-byte file. `0x01` is a *sentinel* meaning "hand this
+  over to the custom curve"; `0x80` (numeric 0, linear) makes the body ignore the whole
+  578-byte curve block — no error, no warning, the file still lists normally.
+  Across 116 factory files: 52-byte → always `80 80`, 638-byte → always `01 01`.
+* **The body has the same H as the desktop engine**: a hard step at v=128 crosses 50 % at
+  input 144.6 (model `H⁻¹(128) = 146.1`); reconstructing the whole H from a gamma 0.45 curve
+  gives **+0.95 ± 1.04 levels** against the workshop H. So the compensation only needs to
+  exist once — card output and NX Studio output agree.
+
+Final deliverable: **`d300/ncp/release/`**, 30 compensated NCP files ready to copy to the card.
+Note the body only holds **9 custom Picture Controls (C-1…C-9)**, so import in batches.
