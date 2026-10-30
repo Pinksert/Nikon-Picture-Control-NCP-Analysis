@@ -402,3 +402,24 @@ in the NX Studio "compatible with camera" engine (`out = C(H(x))`, −18 in the 
 
 Final deliverable: **`d300/ncp/release/`**, 30 compensated NCP files ready to copy to the card.
 Note the body only holds **9 custom Picture Controls (C-1…C-9)**, so import in batches.
+
+### How close does the result actually look?
+
+29 same-frame sample pairs (one RAW, exported once with NX Studio's newest Picture Controls and
+once with the compensated NCP files) were compared pixel by pixel — see
+[`d300/samples/`](d300/samples/README.md).
+
+* **Tone is essentially solved**: every filter's mean luminance deviation is within ±4 levels, and
+  the tone-curve RMS is 3.3 levels at the median.
+* **Colour is not**: the overall mean absolute difference is 8.4 levels, and nearly all of it is
+  colour. Saturation sits at `0x80` (numeric 0) in every generated file, so presets that lean on
+  desaturation (`SILENCE` 4.35×, `BLEACH` 4.03×, `DRAMA` 2.92× more chromatic than the original)
+  or on a global cast (`MORNING` +27 R−B) cannot be reproduced: an NCP curve is a **single luminance
+  LUT**, with no per-channel curve to tint with.
+* **Best group**: pure monochrome (charcoal / graphite / binary / carbon / monochrome), 3.5–5.8 levels.
+  **Worst group**: sepia / blue / red / pink at 13–16 levels — those were built as
+  "monochrome base + heavy toning", while the originals are "low saturation, colour partly retained,
+  light toning". That route needs rebuilding.
+
+Bottom line: monochrome filters are usable as-is; colour Creative Picture Controls are
+*same-mood approximations*, not reproductions.
