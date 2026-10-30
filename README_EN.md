@@ -405,17 +405,19 @@ Note the body only holds **9 custom Picture Controls (C-1…C-9)**, so import in
 
 ### How close does the result actually look?
 
-29 same-frame sample pairs (one RAW, exported once with NX Studio's newest Picture Controls and
-once with the compensated NCP files) were compared pixel by pixel — see
+30 same-frame sample pairs, filters 01–30 in full (one RAW, exported once with NX Studio's newest
+Picture Controls and once with the compensated NCP files), were compared pixel by pixel — see
 [`d300/samples/`](d300/samples/README.md).
 
 * **Tone is essentially solved**: every filter's mean luminance deviation is within ±4.2 levels (median 1.4), and
-  the tone-curve RMS is 3.9 levels at the median.
+  the tone-curve RMS is 3.6 levels at the median.
 * **Colour is not**: the overall mean absolute difference is 8.4 levels, and nearly all of it is
-  colour. Saturation sits at `0x80` (numeric 0) in every generated file, so presets that lean on
-  desaturation (`SILENCE` 4.35×, `BLEACH` 4.03×, `DRAMA` 2.92× more chromatic than the original)
-  or on a global cast (`MORNING` +27 R−B) cannot be reproduced: an NCP curve is a **single luminance
-  LUT**, with no per-channel curve to tint with.
+  colour. `DREAM` is the cleanest example — tone-curve RMS just 2.2 levels and ΔL +0.7, yet it still
+  lands at 9.8 levels because of one warm cast (R−B off by −26). Saturation sits at `0x80`
+  (numeric 0) in every generated file, so presets that lean on desaturation (`SILENCE` 4.35×,
+  `BLEACH` 4.03×, `DRAMA` 2.92× more chromatic than the original) or on a global cast
+  (`PURE` +32, `DENIM` +31, `MORNING` +27 R−B) cannot be reproduced: an NCP curve is a
+  **single luminance LUT**, with no per-channel curve to tint with.
 * **Best group**: pure monochrome (charcoal / graphite / binary / carbon / monochrome), 3.5–5.8 levels.
   **Worst group**: sepia / blue / red / pink at 13–16 levels — those were built as
   "monochrome base + heavy toning", while the originals are "low saturation, colour partly retained,

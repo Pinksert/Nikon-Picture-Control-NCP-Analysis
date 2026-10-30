@@ -3,8 +3,9 @@
 
 同一张 NEF（DSC_3891）导出两套 30 张：
   工坊原版  = NX Studio 内置最新优化校准   → 测试图片/DSC_3891_30..59.JPG
-  D300 NCP = 发布包里的补偿版 NCP（工坊载入） → 测试图片/DSC_3891_01..29.JPG（滤镜 02..30）
-  滤镜 01 DREAM 的我方样片缺失（导出时没有 30 号），脚本会跳过并记录。
+  D300 NCP = 发布包里的补偿版 NCP（工坊载入） → 测试图片/DSC_3891.JPG（滤镜 01）
+             + 测试图片/DSC_3891_01..29.JPG（滤镜 02..30）
+  即我方样片 = 无后缀那张打头、再逐个编号；30 对齐全，无缺失。
 
 用法：
     python compare_samples.py            # 只算数据
@@ -61,8 +62,9 @@ FILTERS = [
 
 
 def our_path(slot):
+    """滤镜 01 = 无后缀的 DSC_3891.JPG；02..30 = DSC_3891_01..29.JPG。"""
     if slot == 1:
-        return None
+        return os.path.join(SRC, 'DSC_3891.JPG')
     return os.path.join(SRC, 'DSC_3891_%02d.JPG' % (slot - 1))
 
 
