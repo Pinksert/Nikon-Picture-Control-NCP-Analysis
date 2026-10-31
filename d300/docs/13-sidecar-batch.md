@@ -1,7 +1,8 @@
 # 用 sidecar 一次导出 30 张（免手点 30 次）
 
-> 状态：sidecar **会被读取已实机确认**；补齐公式 fixup 在字节层面已还原到与 NX Studio 完全一致，
-> 实机待 V2/V3 确认；**NCP 能否直接塞（V4）是最后一个未知数**。
+> 状态（2026-10-31 17:30 更新）：**模板已拿到并解析完毕，30 份批次 A 已生成**。
+> V4 失败的真因找到了：**套用自定义滤镜时 sidecar 要写两处数据，只改一处会回落 STANDARD**。
+> 详见下面「五·0」。
 > 回退方案永远是 [12-render-new-samples.md](12-render-new-samples.md) 里的人工逐个套用。
 
 ---
@@ -111,6 +112,32 @@ V3 顺带告诉我们 `<PictureControl>` 编号和 `<ExportData>` 谁优先：
 
 ## 五、第二步：批量生成
 
+## 五·0 关键发现：自定义滤镜要写**两处**（V4 失败的真因）
+
+拿到的模板 `lightroom/NKSC_PARAM/DSC_4484.NEF.nksc`（套的是我们导入的 `PICCON01.NCP`，
+NX Studio 显示 DREAM）解析结果：
+
+| 项 | 值 |
+|---|---|
+| `<PictureControl>` | **1** |
+| `<ExportData>` | 638 字节，NCP 布局，名字 DREAM，版本串 `0100` |
+| `<CustomData>` | 638 字节，**与 ExportData 只差第 38 字节**（Export=0x02，Custom=0x00） |
+| `<ExportDataSize>` / `<CustomDataSize>` | 867（= base64 文本长度 852 + 15 个换行，不是字节数） |
+
+对比内置滤镜的 sidecar（V1，392 字节）：**只有 `<ExportData>`，没有 `<Custom>` 节点**。
+也就是说 NX Studio 对「内置滤镜」和「导入的自定义滤镜」写的是两套结构 ——
+我们之前把 NCP 只塞进 `ExportData`（V4），结构不全，于是直接回落成 STANDARD。
+
+模板与磁盘 `PICCON01.NCP` 逐字节比对：**卡 1、卡 2 头部、全部控制点完全相同**，
+只有 LUT 区不同 —— 说明 NX Studio 读入我们的控制点后**按自己的插值重算了 LUT**。
+这一点对我们有利：控制点才是曲线的本体，它没被改。
+
+`_embed_one()` 因此做三件事：两处都写、base64 每 60 字符一行（与亲生模板同排版）、
+size 字段写成 base64 文本长度。生成的 30 个 sidecar 已校验：
+**除两段 base64 外，XML 与模板逐字相同**。
+
+---
+
 ### 情形 A（T2 也显示 DREAM）—— 直接用磁盘 NCP
 
 ```bash
@@ -121,16 +148,72 @@ python d300/tools/sidecar_batch.py make ^
   --out     "_render_v3"
 ```
 
-### 情形 B（T2 显示 STANDARD）—— 先让 NX Studio 生成一个模板
+### 情形 B（V4 显示 STANDARD）—— 让 NX Studio 亲自生成一个模板
 
-1. 导入 30 个 NCP（`文件` → `导入自定义优化校准(&I)…` → `从文件导入`）
-2. 打开源 NEF → 套用 **01 DREAM**（我们导入的 NCP）→ 关掉/保存，让它写出 `.nksc`
-3. 把这个 `.nksc` 作为 `--template` 重跑上面的命令
+> 已确认：V4（我们的 638 字节 NCP 直接塞进 `<ExportData>`）在 NX Studio 里**回落成 STANDARD**，
+> 说明 NCP 是另一套布局，必须借 NX Studio 自己写出来的字节当模板。
+
+下面每一步都在 NX Studio 界面里做，不需要懂命令行。
+
+#### B-0 开开关（只做一次，没做对整条路都不通）
+
+`编辑` → `首选项` → 勾上 **「将调整、标签和评级内容保存到附属文件(照片编辑历史记录)」**
+
+⚠️ 如果你前面没勾过，现在勾上之后，之前生成的任何 sidecar 都要重来一遍。
+
+#### B-1 导入我们的 NCP（先只导 1 个）
+
+1. NX Studio：`文件` → `导入自定义优化校准(&I)…` → `从文件导入`
+2. 选目录 `D300固件\d300\ncp\release\NIKON\CUSTOMPC`，里面 30 个 `PICCON01.NCP … PICCON30.NCP`
+3. **先只导 `PICCON01.NCP`**（它就是 01 DREAM）—— 生成模板只需要 1 个
+   （槽位有限的话更不要一次导 30 个）
+4. 导入后在优化校准下拉里应能看到一个新条目，名字形如 `01 DREAM`，**记下它显示的名字**
+
+#### B-2 让 NX Studio 亲手写出一个 sidecar
+
+1. 新建一个空文件夹，比如 `_template`
+2. 拷一张 NEF 进去（直接用 `_sidecar_probe\V1.NEF` 也行）
+3. NX Studio 打开这个文件夹 → 双击打开那张 NEF
+4. 编辑面板 → **优化校准** → 选刚导入的那个自定义滤镜（01 DREAM）
+5. 切到别的图 / 直接关闭，让 NX Studio 落盘
+6. 回文件夹看，应多出一个 `xxx.NEF.nksc` —— **这就是模板**
+
+顺手目视确认一下：缩略图上显示的优化校准名是不是「01 DREAM」。
+如果不是，说明导入那一步没成功，先别往下走。
+
+#### B-3 把模板交给我
+
+模板拷到 `d300/_template/`（或直接把路径发我），我跑：
+
+```bash
+python d300/tools/sidecar_batch.py inspect ^
+  --template "<模板 .nksc 路径>" ^
+  --filter   "d300/ncp/release/NIKON/CUSTOMPC/PICCON01.NCP"
+```
+
+它会打印：NX Studio 把我们的 NCP 存成了几张卡、一共多少字节、和磁盘原文件差在哪几个字节。
+三种可能：
+
+| 打印结果 | 怎么办 |
+|---|---|
+| 只是多了补齐段 / 改了版本串 | 我把这个变换抄下来，30 个全适用，最省事 |
+| 被重新编码成另一套布局 | 我把变换写成函数逐个套，仍然全自动 |
+| 带了槽位号、序号之类上下文 | 无法复现 → 回退人工套 30 次 |
+
+#### B-4 批量生成
+
+```bash
+python d300/tools/sidecar_batch.py make ^
+  --template "<模板 .nksc 路径>" ^
+  --nef      "<你的源 NEF>" ^
+  --filters  "d300/ncp/release/NIKON/CUSTOMPC" ^
+  --out      "_render_v3"
+```
 
 模板只用来提供**骨架和 `<PictureControl>` 编号**，滤镜字节仍然来自磁盘上的 NCP 文件。
-脚本不凭空构造字节，只替换 NX Studio 自己写过的东西，所以兼容性由 NX Studio 保证。
+脚本不凭空构造字节，只替换 NX Studio 自己写过的东西，所以兼容性由 NX Studio 自己保证。
 
-脚本会逐个打印「往返 OK」，确认嵌进去的和原文件逐字节一致。
+脚本会逐个打印「往返 OK」，确认嵌进去的和原文件逐字节一致。然后按第六节导出。
 
 ---
 
@@ -156,10 +239,12 @@ python d300/tools/real_render_check.py --dir real_v3
 |---|---|
 | NX Studio 读 sidecar | **已验证**：V1 显示 DREAM，sidecar 会被读取 |
 | 磁盘 NP3 直接嵌 | **已验证不行**，但补齐公式 fixup 已还原出与 NX Studio 完全一致的字节，**实机待 V2/V3 确认** |
-| 磁盘 **NCP** 能否直接嵌 | **未验证**（V4 就是要验这个）。NCP 是 2 张大卡的另一套布局，fixup 不适用 |
+| 磁盘 **NCP** 能否直接嵌 | **已验证不行**：V4 回落成 STANDARD。NCP 是 2 张大卡的另一套布局，fixup 不适用 → 走情形 B 借模板 |
 | 源 NEF | 本机 4 张 D300 NEF（DSC_4484/5658/8100/9308）经结构相关性比对**都不是**原样片 DSC_3891（相关 0.06–0.20）。方案 A 需要你提供 DSC_3891.NEF |
 | 磁盘占用 | 30 份 × 约 12 MB ≈ 360 MB |
 | 色彩程序 | 仍然必须设「**与照相机兼容**」，两处都要（首选项 + 编辑面板），这一点与 sidecar 无关 |
+| 编号 vs 内嵌，谁优先 | **待实机确认**：`<PictureControl>=1` 沿用模板，若 NX Studio 以编号为准，30 张会全显示同一个。打开 `_render_v3` 看缩略图名字即可判定 |
+| 底片 | 现有对照 `samples/workshop/` 是 **DSC_3891**（2848×4288 竖构图）渲的，与本次源 `DSC_4484.NEF`（4288×2848 横构图）**不是同一张**，两边都要用 4484 重渲才能比 |
 
 ---
 
