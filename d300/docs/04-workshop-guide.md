@@ -1,6 +1,8 @@
 # 尼康工坊（NX Studio）测试指南
 
-本机已装 **NX Studio 1.10.0**（`C:\Program Files\Nikon\NXStudio`），可以直接测，不用插卡。
+本机已装 **NX Studio 1.7.1**（`C:\Program Files\Nikon\NXStudio`），可以直接测，不用插卡。
+（2026-10-31 核对：`NXStudio.exe` ProductVersion = 1.7.1.3000；旧文稿里写的 1.10.0 已过时。
+下面的菜单文字是从安装目录的 `NXStudioLang.nlf` / `PreferenceDialogLang.nlf` 里逐条核对过的。）
 
 ---
 
