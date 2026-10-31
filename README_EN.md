@@ -411,13 +411,46 @@ Picture Controls and once with the compensated NCP files), were compared pixel b
 
 * **Tone is essentially solved**: every filter's mean luminance deviation is within ±4.2 levels (median 1.4), and
   the tone-curve RMS is 3.6 levels at the median.
-* **Colour is not**: the overall mean absolute difference is 8.4 levels, and nearly all of it is
+* **Colour is not** (first revision): the overall mean absolute difference is 8.4 levels, and nearly all of it is
   colour. `DREAM` is the cleanest example — tone-curve RMS just 2.2 levels and ΔL +0.7, yet it still
   lands at 9.8 levels because of one warm cast (R−B off by −26). Saturation sits at `0x80`
   (numeric 0) in every generated file, so presets that lean on desaturation (`SILENCE` 4.35×,
   `BLEACH` 4.03×, `DRAMA` 2.92× more chromatic than the original) or on a global cast
   (`PURE` +32, `DENIM` +31, `MORNING` +27 R−B) cannot be reproduced: an NCP curve is a
   **single luminance LUT**, with no per-channel curve to tint with.
+
+### Second revision (current `d300/ncp/release/`)
+
+The first revision left the saturation and hue sliders at `0x80` (numeric 0). The second revision
+puts them to work:
+
+* saturation/hue calibrated from four in-camera test shots — **×1.13 chroma per step, 3.5° hue per
+  step** (measured 1.1274/step for `SAT-1 → SD`, 1.1351/step for `SAT-1 → SAT+1`, 7.00° across
+  two hue steps);
+* tone curves refitted with a **held-out half-frame**: parameters are chosen on the top half and
+  only accepted if they also improve the bottom half, which is never seen during fitting;
+* curve end-points extrapolated from the slope of the last valid bins (the shadows used to be
+  lifted by 3–6 levels when the darkest bins had too few pixels to fit).
+
+Result over the same 30 pairs, recomputed **from the files themselves** by
+`d300/tools/audit_release.py` (not self-reported by the optimiser):
+
+| Group | n | v1 | v2 |
+|---|---|---|---|
+| Mono 17–20 | 4 | 3.92 | **2.77** |
+| New-system 21–30 | 10 | 5.06 | **4.28** |
+| Creative colour 01–12 | 12 | 9.52 | **8.20** |
+| Toning 13–16 | 4 | 14.38 | **8.19** |
+| **All 30** | **30** | **7.94** | **6.17 (−22.3 %)** |
+
+**22 improved, 8 unchanged, 0 worse.** On the held-out half: **9.08 → 7.08 (−22.0 %)**, i.e. the
+gain is not an artefact of fitting. The toning group is the biggest win (14.4 → 8.2): those four
+were built as "true monochrome + heavy toning (`0x84`)", while the originals are "low saturation,
+some colour left + light toning" — dropping the toning strength to `0x81–0x82` fixed the approach.
+
+Still out of reach: **casts** (`DENIM` 13.24 → 13.17, `MORNING` unchanged at 11.81) and **per-hue
+saturation**. Seven filters are already at the −3 hardware limit on saturation and still not low
+enough. Methodology: `d300/docs/08-tone-color-v2.md`.
 * **Best group**: pure monochrome (charcoal / graphite / binary / carbon / monochrome), 3.5–5.8 levels.
   **Worst group**: sepia / blue / red / pink at 13–16 levels — those were built as
   "monochrome base + heavy toning", while the originals are "low saturation, colour partly retained,
