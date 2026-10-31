@@ -45,6 +45,40 @@ import re
 import shutil
 import sys
 
+# ------------------------------------------------------- 磁盘文件 → sidecar 字节
+
+# NX Studio 写进 sidecar 的不是磁盘滤镜文件原样，而是「规范化」后的形态：
+#   磁盘文件只到卡 0x16（22 张），NX Studio 额外补了卡 0x17–0x20 共 144 字节。
+# 这 144 字节在 DREAM / PORTRAIT 两个样例里**完全相同**，是固定补齐段。
+# 实测（2026-10-31）：磁盘文件 + 这段 + 结束标记，并把版本串 0300 改成 0310，
+#   与 NX Studio 生成的字节**逐字节完全一致**（0 差异）。
+# 这正是直接塞磁盘文件会失败的原因 —— 少了这段补齐卡。
+FIX_HEX = (
+    '0000170000000002ff040000180000000002ff04000019000000000280010000'
+    '1a0000000002800100001b0000000002800100001c0000000002800100001d00'
+    '00000002800100001e0000000002800100001f000000001c8080808080808080'
+    '8080808080808080808080808080808001010100000020000000001480008080'
+    '800080808000808001010100b2018001'
+)
+FIXUP_TAIL = bytes.fromhex(FIX_HEX)          # 144 字节
+FIXUP_END = b'\x00\x00\x00\x00'              # 结束标记
+FIXUP_BODY = 244                             # 卡 0x01–0x16 的截止偏移
+
+
+def fixup(disk_bytes):
+    """磁盘滤镜文件 → NX Studio sidecar 能接受的字节（仅对 NP3 布局有效）。
+
+    NP3 布局：b'NCP\\0' + 卡0x01(版本4B) + 卡0x02(名字20B) + 卡0x03..0x16(各2B)
+              → 卡区截止在 244 字节
+    """
+    if disk_bytes[4:8] == b'\x00\x00\x00\x01':
+        raise ValueError('这是 NCP 布局（卡编号体系不同），fixup 不适用，'
+                         '请先用 inspect 看 NX Studio 实际存了什么')
+    b = bytearray(disk_bytes[:FIXUP_BODY])
+    b[14] = ord('1')                          # 版本串 0300 → 0310
+    return bytes(b) + FIXUP_TAIL + FIXUP_END
+
+
 # ---------------------------------------------------------------- 基础读写
 
 def read_sidecar(path):
@@ -141,11 +175,16 @@ def cmd_probe(args):
 
     plan = [
         # (文件名, 滤镜字节, PictureControl 编号, 期望在 NX Studio 里看到)
-        ('T1', base, 14, 'DREAM（模板原样，内嵌 392 字节）'),
-        ('T2', open(os.path.join(root, '滤镜', 'DREAM.NP3'), 'rb').read(),
-         14, 'DREAM（换成磁盘 NP3，248 字节）'),
-        ('T3', open(os.path.join(root, '滤镜', 'MONOCHROME.NP3'), 'rb').read(),
-         13, 'MONOCHROME（黑白，13 是推测的编号）'),
+        ('V1', base, 14, 'DREAM（模板原样，NX Studio 亲生的 392 字节）'),
+        ('V2', fixup(open(os.path.join(root, '滤镜', 'DREAM.NP3'), 'rb').read()),
+         14, 'DREAM（磁盘 NP3 经 fixup 补齐，应还原成与 V1 相同）'),
+        ('V3', fixup(open(os.path.join(root, '滤镜', 'MONOCHROME.NP3'), 'rb').read()),
+         13, 'MONOCHROME（黑白，一眼可辨；13 是推测编号）'),
+        # NCP 是另一套布局（2 张大卡），fixup 不适用。先按「直接塞本体」试一次：
+        # 若 V4 显示 DREAM，整条路就通了，连模板都不用做。
+        ('V4', open(os.path.join(root, 'd300', 'ncp', 'release', 'NIKON',
+                                 'CUSTOMPC', 'PICCON01.NCP'), 'rb').read(),
+         14, 'DREAM（我们的 v3 NCP，638 字节，直接塞本体）'),
     ]
 
     print('验证包目录：%s\n' % out)
@@ -160,13 +199,17 @@ def cmd_probe(args):
     print("""
 怎么判定（在 NX Studio 里打开 %s 文件夹，看三张缩略图的「优化校准」名）：
 
-  T1 显示 STANDARD 且 T2 也 STANDARD  →  sidecar 根本没被读取，方案作废
-  T1 显示 DREAM、T2 显示 STANDARD     →  读了 sidecar，但磁盘滤镜文件不能直接塞
-                                          （必须拿 NX Studio 自己生成的当模板）
-  T1 显示 DREAM、T2 显示 DREAM        →  完全可行，磁盘滤镜文件可直接内嵌
-  T3 的结果额外告诉我们编号和 ExportData 谁优先：
-      显示 MONOCHROME → 以 ExportData 为准（批量时编号可以沿用模板，最省事）
-      显示 DREAM      → 以 PictureControl 编号为准（批量时必须给对编号）
+  V1 显示 STANDARD                    →  sidecar 根本没被读取，方案作废
+  V1 显示 DREAM、V2/V3 也各自正确      →  fixup 补齐公式实机有效，可以批量
+  V1 显示 DREAM、V2 显示 STANDARD      →  读了 sidecar，但补齐公式不对
+
+V3 顺带告诉我们 <PictureControl> 编号和 <ExportData> 谁优先：
+      显示 MONOCHROME → 以 ExportData 为准（批量时编号沿用模板即可，最省事）
+      显示 DREAM      → 以编号为准（13 是推测值，猜错就会显示错滤镜）
+
+V4 是关键：我们的产物是 NCP（另一套布局，2 张大卡，638 字节），fixup 对它不适用。
+      显示 DREAM      → NCP 可以直接塞本体，整条路通了，不用做模板
+      显示 STANDARD   → 需要你套用一个 NCP 后导出 sidecar 当模板，我用 inspect 分析
 
 前提：编辑 → 首选项 → 「将调整、标签和评级内容保存到附属文件(照片编辑历史记录)」要勾上，
       否则 NX Studio 会把调整写回 NEF 里，sidecar 就不会被读。
@@ -203,13 +246,20 @@ def cmd_make(args):
         fb = open(os.path.join(fdir, fn), 'rb').read()
         # PictureControl 编号沿用模板，不猜：
         # 同一批滤镜（都是自定义优化校准）编号应当一致，猜错反而会出事
-        txt = embed_data(tpl_txt, fb)
+        used = fb
+        if args.fixup:
+            try:
+                used = fixup(fb)
+            except ValueError as e:
+                print('  %02d %-22s 跳过：%s' % (i, stem, e))
+                continue
+        txt = embed_data(tpl_txt, used)
         if not args.dry_run:
             copy_nef(nef, os.path.join(out, stem + '.NEF'))
             write_sidecar(os.path.join(out, stem + '.NEF.nksc'), txt)
-        ok = export_data(txt) == fb
-        print('  %02d %-22s %-11s %3d 字节  往返%s'
-              % (i, stem, filt_name(fb), len(fb), 'OK' if ok else '失败'))
+        ok = export_data(txt) == used
+        print('  %02d %-22s %-11s %3d→%-3d 字节  往返%s'
+              % (i, stem, filt_name(fb), len(fb), len(used), 'OK' if ok else '失败'))
 
     print("""
 生成完毕：%s
@@ -224,11 +274,66 @@ def cmd_make(args):
 """ % (out, len(files), len(files)))
 
 
+def cmd_inspect(args):
+    """解析 NX Studio 导出的模板，报告它到底存了什么、能不能批量构造。"""
+    import struct
+    path = os.path.abspath(args.template)
+    _, txt = read_sidecar(path)
+    d = export_data(txt)
+    print('模板：%s' % os.path.basename(path))
+    print('  <PictureControl>      = %s' % get_field(txt, 'PictureControl'))
+    print('  <ExportDataSize>      = %s（实际 %d 字节）'
+          % (get_field(txt, 'ExportDataSize'), len(d)))
+    print('  滤镜名字              = %s' % filt_name(d))
+    print('  魔数                  = %r' % d[:4])
+    print('  第 5–8 字节           = %s  → %s'
+          % (d[4:8].hex(), 'NCP 布局' if d[4:8] == b'\x00\x00\x00\x01' else 'NP3 布局'))
+    print('  版本串                = %r' % d[12:16])
+
+    off, n = 4, 0
+    print('  卡结构：')
+    while off + 8 <= len(d) and n < 40:
+        t, ln = struct.unpack_from('>II', d, off)
+        if t == 0:
+            print('    @%-4d 结束标记' % off)
+            break
+        print('    @%-4d 类型%08X  长%-4d %s'
+              % (off, t, ln, d[off + 8:off + 8 + min(ln, 16)].hex()))
+        off += 8 + ln
+        n += 1
+    print('  卡数 %d，卡区结束 @%d，文件长 %d' % (n, off, len(d)))
+
+    # 与磁盘文件比对
+    if args.filter:
+        fb = open(os.path.abspath(args.filter), 'rb').read()
+        print('\n  与磁盘滤镜 %s（%d 字节）比对：' % (os.path.basename(args.filter), len(fb)))
+        if fb == d:
+            print('    完全相同 → 磁盘文件可直接内嵌，无需 fixup')
+            return
+        # 规范长度 = 卡区 244 + 补齐段 144 + 结束 4 = 392，与磁盘文件本身多长无关
+        if (fb[4:8] != b'\x00\x00\x00\x01'
+                and len(d) == FIXUP_BODY + len(FIXUP_TAIL) + len(FIXUP_END)):
+            cand = fixup(fb)
+            print('    fixup 构造 %d 字节，差异 %d 字节 %s'
+                  % (len(cand), sum(1 for i in range(len(d)) if cand[i] != d[i]),
+                     '→ 完全一致' if cand == d else ''))
+            return
+        common = 0
+        while common < min(len(fb), len(d)) and fb[common] == d[common]:
+            common += 1
+        print('    既不相同也不能用 fixup。最长公共前缀 %d 字节。' % common)
+        print('    → 需要按上面打印的卡结构另找规律（把这份输出发出来分析）')
+
+
 def main():
     ap = argparse.ArgumentParser(description='NX Studio sidecar 批量套用滤镜')
     sub = ap.add_subparsers(dest='cmd')
 
     sub.add_parser('probe', help='生成 3 张验证包，判定 sidecar 是否被读取')
+
+    n = sub.add_parser('inspect', help='解析模板 sidecar，报告卡结构与能否构造')
+    n.add_argument('--template', required=True, help='NX Studio 导出的 .nksc')
+    n.add_argument('--filter', help='对应的磁盘滤镜文件，用来比对')
 
     m = sub.add_parser('make', help='以模板 sidecar 批量生成 NEF + sidecar')
     m.add_argument('--template', required=True, help='NX Studio 导出的模板 .nksc')
@@ -237,10 +342,14 @@ def main():
     m.add_argument('--out', required=True, help='输出目录')
     m.add_argument('--dry-run', action='store_true',
                    help='只检查能否正确嵌入并打印清单，不写文件')
+    m.add_argument('--fixup', action='store_true',
+                   help='对磁盘文件先做补齐（NP3 布局需要；NCP 会自动跳过）')
 
     args = ap.parse_args()
     if args.cmd == 'probe':
         cmd_probe(args)
+    elif args.cmd == 'inspect':
+        cmd_inspect(args)
     elif args.cmd == 'make':
         cmd_make(args)
     else:
