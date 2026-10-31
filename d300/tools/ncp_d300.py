@@ -379,18 +379,18 @@ def verify_one(path):
         bad.append('名字不是大写（尼康自己的文件都是大写）')
 
     base = struct.unpack('>H', d1[24:26])[0]
-    if base not in BASES:
+    if base not in ACCEPTED_BASES:
         if base in NEW_SYS_BASES:
-            bad.append('底子 %04X 是新系统的「%s」码，D300 不认（机身列表里根本不会出现），'
-                       '必须改成 D300 的 1/2/3/4' % (base, NEW_SYS_BASES[base]))
+            bad.append('底子 %04X（新系统「%s」码）还没在「滑块一致」条件下验过；'
+                       '已证可用的是彩色 0x0001、单色 0x064D' % (base, NEW_SYS_BASES[base]))
         else:
-            bad.append('底子 %04X 不在 D300 认得的四个里（1 标准 / 2 中性 / 3 鲜艳 / 4 单色）' % base)
+            bad.append('底子 %04X 不在机身认得的码里（彩色 0x0001 / 单色 0x064D）' % base)
     if d1[27] != 0xFF:
         bad.append('未知位不是 FF')
 
     sl = list(d1[28:36])
     # 底子与滑块必须自洽：单色没有饱和度/色相，彩色没有滤镜/调色/强度
-    mono = base == 0x0004
+    mono = base in (0x0004, 0x064D)
     if mono and (sl[3] != SL_NA or sl[4] != SL_NA):
         bad.append('单色底子却给了饱和度 %02X / 色相 %02X，应为 FF FF（不适用）' % (sl[3], sl[4]))
     if not mono and (sl[5] != SL_NA or sl[6] != SL_NA):
