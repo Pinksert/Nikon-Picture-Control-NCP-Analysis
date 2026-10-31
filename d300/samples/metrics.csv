@@ -1,4 +1,4 @@
-﻿slot,en,cn,base,sliders,e_v1,e_v2,e_cur,delta
+﻿slot,en,cn,base,sliders,e_v1,e_v2,e_v3,delta
 1,DREAM,梦幻,0x0001,80 01 01 7E 80 FF FF FF,9.77,9.47,9.37,-0.24
 2,MORNING,清晨,0x0001,82 01 01 80 80 FF FF FF,11.81,11.81,11.81,+0.00
 3,POP,流行,0x0001,83 01 01 82 80 FF FF FF,5.96,4.26,4.26,-0.85
