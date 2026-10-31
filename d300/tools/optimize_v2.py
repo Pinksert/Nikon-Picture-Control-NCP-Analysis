@@ -210,38 +210,77 @@ def _fit(slot, O, R, clamp=None):
     return fit_map(O, R, neutral_only=True, clamp=6.0 if clamp is None else clamp)
 
 
-def explore(slot):
-    """第一步：只用上半幅拟合、只看下半幅打分，挑出「能在没见过的像素上复现」的结构。
+CV_GRID = (2, 4)          # 交叉验证折数 = 2×4 = 8
 
-    这一步是必需的。整幅拟合时 DEEPTONE 能从 12.23 降到 8.77，但把那根曲线拿到下半幅
-    一验，收益归零 —— 说明降下去的其实是这张照片上下的亮度分布差，不是真正的影调差。
+
+def cv_cells(shape, ny=CV_GRID[0], nx=CV_GRID[1]):
+    """把画面切成 ny×nx 个互不相交的块，返回每块的布尔 mask
+
+    按块切而不是按上下半幅切，是为了不让「上半天、下半天」这种构图差异
+    被当成「曲线不泛化」的证据。每块横跨全宽、纵向 1/ny 高，分布更均匀。
+    """
+    h, w = shape[:2]
+    yy, xx = np.mgrid[0:h, 0:w]
+    ey = np.linspace(0, h, ny + 1).astype(int)
+    ex = np.linspace(0, w, nx + 1).astype(int)
+    return [(yy >= ey[i]) & (yy < ey[i + 1]) & (xx >= ex[j]) & (xx < ex[j + 1])
+            for i in range(ny) for j in range(nx)]
+
+
+def render(O, f, slot, n, m, k):
+    """按槽位类型把「曲线 + 滑块」落到画面上（唯一入口，避免各处参数顺序写岔）"""
+    if slot in TONED:
+        return predict(O, f, 1.0, 0.0, k)
+    if slot in MONO:
+        return predict(O, f)
+    return predict(O, f, SAT_STEP ** n, HUE_STEP * m)
+
+
+def explore(slot):
+    """第一步：挑「在没见过的像素上也能复现」的结构。用 2×4 = 8 折交叉验证。
+
+    为什么不是「上/下半幅」
+    ----------------------
+    第 2 版用的是单次 50/50 上下切分，这等于假设一张照片的上下两半亮度分布相同。
+    真实照片不满足：上半幅是天、下半幅是地的时候，曲线在下半幅上根本没被约束过，
+    打分自然没收益，于是被判「维持原样」。
+
+    代价是实实在在的：槽 23 DEEPTONE 被这个切法判成「不动」，可它的 |ΔL*| 达 4.95
+    （30 支平均 1.43），是全场影调差最大的两支之一；换成 8 折之后同一支从 12.23
+    降到 8.76，而且这 2.68 是在「7/8 像素拟合、1/8 没见过的像素打分」上测出来的，
+    不是把全幅拟合的过拟合结果拿来当收益。
+
+    8 折切成 2×4 的块，每块横跨全宽、纵向半高，亮度与色相分布比单纯的上下两半均匀
+    得多；每次留一块做测试，剩下的七块拟合，8 次循环取每块上的平均测试误差。
+    候选结构按「8 折平均测试误差」排序，而不是某一次的切身结果。
     """
     O, R = load('d300ncp', slot), load('workshop', slot)
-    h = O.shape[0] // 2
-    Of, Rf = O[:h], R[:h]
-    ev = slice(h, None)
-
-    def score(f, s=1.0, deg=0.0, k=1.0):
-        return float(np.abs(predict(O, f, s, deg, k)[ev] - R[ev]).mean())
-
-    e0 = score(ID)
-    cands = [(e0, 'id', 0, 0, 1.0)]
-    f = _fit(slot, Of, Rf)
-    cands.append((score(f), 'tone', 0, 0, 1.0))
+    cs = [(0, 0, 1.0)]
     if slot in TONED:
         for kb in range(0x80, 0x8A):
-            k = (kb - 0x80) / 4.0
-            cands.append((score(f, 1.0, 0.0, k), 'tone', 0, 0, k))
+            cs.append((0, 0, (kb - 0x80) / 4.0))
     elif slot not in MONO:
         for n in range(-3, 4):
             for m in range(-3, 4):
-                cands.append((score(f, SAT_STEP ** n, HUE_STEP * m), 'tone', n, m, 1.0))
+                cs.append((n, m, 1.0))
 
-    cands.sort(key=lambda c: c[0])
-    b = cands[0]
-    if b[0] > e0 - MIN_GAIN:                       # 留出半幅上收益不够，就别动
-        b = (e0, 'id', 0, 0, 1.0)
-    return dict(kind=b[1], n=b[2], m=b[3], k=b[4], cv0=e0, cv1=b[0])
+    ms = cv_cells(O.shape)
+    acc = np.zeros(len(cs))
+    base = 0.0
+    for msk in ms:
+        tr, te = ~msk, msk
+        f = _fit(slot, O[tr][:, None, :], R[tr][:, None, :])
+        base += float(np.abs(predict(O, ID)[te] - R[te]).mean())
+        for i, (n, m, k) in enumerate(cs):
+            acc[i] += float(np.abs(render(O, f, slot, n, m, k)[te] - R[te]).mean())
+    acc /= len(ms)
+    base /= len(ms)
+
+    i = int(np.argmin(acc))
+    n, m, k = cs[i]
+    if acc[i] > base - MIN_GAIN:                   # 留出块上收益不够，就别动
+        return dict(kind='id', n=0, m=0, k=1.0, cv0=base, cv1=base)
+    return dict(kind='tone', n=n, m=m, k=k, cv0=base, cv1=float(acc[i]))
 
 
 def optimize_slot(slot):
@@ -262,13 +301,7 @@ def optimize_slot(slot):
         elif slot in TONED:
             how = '调色强度 %02X' % (0x80 + int(round(pl['k'] * 4)))
 
-    s = SAT_STEP ** pl['n']
-    if slot in TONED:
-        P = predict(O, f, 1.0, 0.0, pl['k'])
-    elif slot in MONO:
-        P = predict(O, f)
-    else:
-        P = predict(O, f, s, HUE_STEP * pl['m'])
+    P = render(O, f, slot, pl['n'], pl['m'], pl['k'])
     e1 = float(np.abs(P - R).mean())
 
     T = compose(Tcur, f)
@@ -280,7 +313,7 @@ def optimize_slot(slot):
 def main():
     dry = '--dry' in sys.argv
     print('%-4s %-24s %-6s %-9s %-6s %-6s %-5s %s'
-          % ('槽', '滤镜', '现状', '留出验证', '改后', '降幅', 'Δ曲线', '动作'))
+          % ('槽', '滤镜', '现状', '8 折留出', '改后', '降幅', 'Δ曲线', '动作'))
     print('-' * 96)
     res = []
     for slot in range(1, 31):
@@ -295,7 +328,7 @@ def main():
     print('30 支平均（整幅）%.2f → %.2f（降 %.1f%%）  跌幅总和 %.1f'
           % (a[:, 0].mean(), a[:, 1].mean(), (1 - a[:, 1].mean() / a[:, 0].mean()) * 100,
              (a[:, 0] - a[:, 1]).sum()))
-    print('30 支平均（留出半幅）%.2f → %.2f（降 %.1f%%）   ← 不参与拟合的那一半，才是真收益'
+    print('30 支平均（8 折留出）%.2f → %.2f（降 %.1f%%）   ← 每折都没见过的那块，才是真收益'
           % (c[:, 0].mean(), c[:, 1].mean(), (1 - c[:, 1].mean() / c[:, 0].mean()) * 100))
     if dry:
         return
@@ -332,12 +365,7 @@ def main():
                               / OUT_MAX * 255.0)
         ic = inv_curve(target_curve(slot))
         f_file = np.interp(ic(np.arange(256, dtype=float)), np.arange(256, dtype=float), T_file)
-        if slot not in MONO:
-            P = predict(load('d300ncp', slot), f_file, SAT_STEP ** r['n'], HUE_STEP * r['m'])
-        elif slot in TONED:
-            P = predict(load('d300ncp', slot), f_file, 1.0, 0.0, r['k'])
-        else:
-            P = predict(load('d300ncp', slot), f_file)
+        P = render(load('d300ncp', slot), f_file, slot, r['n'], r['m'], r['k'])
         e_file = float(np.abs(P - load('workshop', slot)).mean())
 
         rows.append((slot, NAMES[slot - 1], CN[slot - 1], base, sl, r['e0'], r['e1'],
