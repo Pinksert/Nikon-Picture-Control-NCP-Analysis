@@ -35,7 +35,8 @@ IN_REPO = os.path.normpath(NCPROOT) != os.path.normpath(HERE)
 
 SRC = NCPROOT
 SRC_DIR = os.path.join(NCPROOT, 'out_comp')
-DST = os.path.join(NCPROOT, 'release') if IN_REPO else os.path.join(HERE, '发布包')
+# v2 之后 `release/` 由 optimize_v2.py 生成，这里只重建 v1 存档
+DST = os.path.join(NCPROOT, 'release_v1') if IN_REPO else os.path.join(HERE, '发布包')
 
 SL_OFF, BASE_OFF, NAME_OFF = 40, 36, 16
 
