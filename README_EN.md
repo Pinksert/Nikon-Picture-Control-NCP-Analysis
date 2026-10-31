@@ -500,8 +500,18 @@ A custom curve acting on the *luminance* axis cannot reproduce that.
 > "Fully identical" is not achievable — not because the tuning is off, but because the D300
 > engine does not have those two dials.**
 
-One degree of freedom has not been tried: the D300's other native bases (`03C2` neutral,
-`00C3` vivid, `0486` portrait, `04C7` landscape). The seven presets that are already at the −3
-saturation limit could be carried by a neutral base instead. This needs no new slider — only a
-different base code plus a refitted curve — but how much of the change is tone (absorbable by the
-curve) and how much is colour processing (not absorbable) can only be settled by one real render.
+The one degree of freedom we thought was left — swapping the base code — **turns out not to exist**.
+The firmware was checked directly (`d300/docs/10-firmware-bases.md`, offsets reproducible byte by byte
+in `B3000111.bin`):
+
+* `0x0001` / `0x03C2` / `0x00C3` / `0x064D` are the D300's **own** base codes, stored immediately
+  before the strings `STANDARD` / `NEUTRAL` / `VIVID` / `MONOCHROME`. The earlier note calling
+  `0x03C2` etc. "new-system codes the D300 does not recognise" was wrong.
+* But the four base records are fixed-length 856-byte blocks, and `STANDARD` vs `NEUTRAL` differ in
+  **only 36 bytes** — the name, the two-letter abbreviation, one tone-step table and a handful of
+  default slider bytes. The other 820 bytes are identical.
+
+So the D300's "standard / neutral / vivid" are not four colour engines, they are four sets of
+default parameters on one engine — and the defaults are overridden by the sliders we write into the
+file. **Changing the base code buys nothing**, which is also why the colour cast cannot be pushed
+down: the cast comes from processing that all four bases share.
