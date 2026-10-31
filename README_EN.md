@@ -458,3 +458,50 @@ enough. Methodology: `d300/docs/08-tone-color-v2.md`.
 
 Bottom line: monochrome filters are usable as-is; colour Creative Picture Controls are
 *same-mood approximations*, not reproductions.
+
+
+### Field-level fidelity check against the original NP3
+
+The photo comparison answers "how many pixels differ". A complementary check
+(`d300/tools/verify_vs_np3.py`, write-up in `d300/docs/09-np3-fidelity.md`) takes the files apart
+and compares field by field. It turned up something counter-intuitive:
+
+**In all 26 NP3 files with a matching original, the contrast, brightness, saturation and hue
+cards are `0` or "not applicable".** Only five cards carry values: sharpening, clarity,
+toning strength, effect level and quick sharpening. In other words, every preset's tone and
+colour character lives in the **built-in curve the base code points to** (`0801`–`0814`,
+`0001`, `03C2`, `00C3`, `0486`, `04C7`, `064D`, `028E`) — not in the parameters.
+
+That is exactly why the saturation/hue values written into the NCP files have no counterpart in
+the original: they are compensation for what the base curve does, not a copy of a parameter.
+
+| Parameter | identical | clamped | cross-gen compensation | handed to curve | n/a |
+|---|---|---|---|---|---|
+| Sharpening | **25** | 1 | 0 | — | 0 |
+| Contrast | — | — | 0 | **26** | 0 |
+| Brightness | — | — | 0 | **26** | 0 |
+| Saturation | 5 | 0 | 12 | — | 9 |
+| Hue | 8 | 0 | 9 | — | 9 |
+
+Everything that could be copied was copied. The only hard loss is `DREAM`: the original asks for
+sharpening −2, while the D300's floor is 0. Three parameters have no slot at all in NCP:
+**clarity** (26/26), **effect level** (all 20 creative presets carry `8A0A`), **quick sharpening** (26/26).
+
+In-camera shots of `DREAM` and `SILENCE` give the first direct real-body reading:
+**mean luminance difference 3.41 / 2.32 levels** (mid-tones only 1.7–3.7), but **chroma off by
+−44 % / +107 %**. Tone is effectively done; colour is the whole remaining gap.
+
+And that gap has a structural reason: measured on the four calibration shots, the D300's
+saturation slider is **linear** (×1.08–1.16 per step across all chroma bands), while the original
+applies a curve on the *chroma* axis — low chroma pushed to near zero, high chroma kept.
+A custom curve acting on the *luminance* axis cannot reproduce that.
+
+> **Tone can be made indistinguishable. Colour can only be made "same family".
+> "Fully identical" is not achievable — not because the tuning is off, but because the D300
+> engine does not have those two dials.**
+
+One degree of freedom has not been tried: the D300's other native bases (`03C2` neutral,
+`00C3` vivid, `0486` portrait, `04C7` landscape). The seven presets that are already at the −3
+saturation limit could be carried by a neutral base instead. This needs no new slider — only a
+different base code plus a refitted curve — but how much of the change is tone (absorbable by the
+curve) and how much is colour processing (not absorbable) can only be settled by one real render.
