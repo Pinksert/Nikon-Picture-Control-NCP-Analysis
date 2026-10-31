@@ -1,0 +1,142 @@
+# 用 sidecar 一次导出 30 张（免手点 30 次）
+
+> 状态：**原理与工具已就绪，实机行为未验证**。请先看「第一步：判定」，跑完 3 张验证包再决定要不要走这条路。
+> 回退方案永远是 [12-render-new-samples.md](12-render-new-samples.md) 里的人工逐个套用。
+
+---
+
+## 一、为什么需要这条路
+
+NX Studio **没有批处理功能**。这不是没找到菜单，是查过安装目录里全部 10 个语言文件（`.nlf`）后的结论：
+`Batch` 只出现在一条警告文案里（`IDS_WARNING_MESSAGE_CONFLICTPROCESS_IMPOSSIBLE_BATCH_MAIN`
+「您尝试导出的文件正在由另一进程使用」），没有任何菜单项叫批处理/批量转换。
+
+所以按常规做法，30 个滤镜就是「套一个 → 导出一次」重复 30 遍。
+
+---
+
+## 二、sidecar 里有什么
+
+NX Studio 的调整文件（`*.NEF.nksc`）是 XMP 文本，其中 `nikon::PictureControl` 过滤器长这样：
+
+```xml
+<filter id="nikon::PictureControl">
+  <active>true</active>
+  <parameters>
+    <Export>
+      <ExportData>TkNQAAAAAQAAAAAE...</ExportData>   ← 滤镜文件本体，base64
+      <ExportDataSize>533</ExportDataSize>
+    </Export>
+    <SelectedPictureControl>0</SelectedPictureControl>
+    <PictureControl>14</PictureControl>
+    ...
+```
+
+**关键实测结论（2026-10-31）**：
+
+| 观察 | 结果 |
+|---|---|
+| `<ExportData>` 里是什么 | **滤镜文件本体**，不是私有序列化格式。内嵌的 392 字节与磁盘 `滤镜/DREAM.NP3` 前 80 字节**逐字节相同**（只差版本串 `0300` / `0310`） |
+| sidecar 是否与文件名绑定 | **否**。`rdf:about=""`，也没有 `OriginalFileName`/`documentID` 一类字段 |
+| `<PictureControl>` 编号 | 已知两个：DREAM=14、PORTRAIT=10。NCP（自定义优化校准）的编号未知 |
+
+sidecar 不与文件名绑定，意味着：**同一张 NEF 复制 N 份，每份配一个只改了 `<ExportData>` 的 sidecar，
+全选 → 导出一次，就能得到 N 张套了不同滤镜的图。**
+
+---
+
+## 三、前提（不设对整条路都不通）
+
+`编辑` → `首选项` → 勾上 **「将调整、标签和评级内容保存到附属文件(照片编辑历史记录)」**
+（原文 `IDS_PREFERENCES_SAVE_FORMAT_SIDECAR`）。
+
+不勾的话 NX Studio 会把调整写回 NEF 内部，sidecar 根本不会被读。
+
+---
+
+## 四、第一步：判定（3 张验证包，零风险）
+
+工具已经生成好了：
+
+```
+C:\Users\admin\WorkBuddy\D300固件\_sidecar_probe\
+    T1.NEF  T1.NEF.nksc    ← 模板原样，内嵌 NX Studio 生成的 DREAM（392 字节）
+    T2.NEF  T2.NEF.nksc    ← 换成磁盘 滤镜/DREAM.NP3（248 字节）
+    T3.NEF  T3.NEF.nksc    ← 换成磁盘 滤镜/MONOCHROME.NP3（284 字节），编号填 13（推测值）
+```
+
+重新生成：`python d300/tools/sidecar_batch.py probe`
+
+**在 NX Studio 里打开这个文件夹，看三张缩略图显示的「优化校准」名**：
+
+| T1 | T2 | 结论 |
+|---|---|---|
+| STANDARD | STANDARD | sidecar 没被读取 → **此路不通**，回退人工方案 |
+| DREAM | STANDARD | sidecar 读了，但磁盘滤镜文件不能直接塞 → 必须用 NX Studio 自己生成的当模板（见情形 B） |
+| DREAM | DREAM | **完全可行**，磁盘滤镜文件可直接内嵌（见情形 A） |
+
+T3 顺带告诉我们 `<PictureControl>` 编号和 `<ExportData>` 谁优先：
+
+- 显示 **MONOCHROME** → 以 ExportData 为准，批量时编号沿用模板即可（最省事）
+- 显示 **DREAM** → 以编号为准，批量时必须给对编号（13 是推测值，猜错就会显示错滤镜）
+
+---
+
+## 五、第二步：批量生成
+
+### 情形 A（T2 也显示 DREAM）—— 直接用磁盘 NCP
+
+```bash
+python d300/tools/sidecar_batch.py make ^
+  --template "C:/Users/admin/WorkBuddy/D300固件/lightroom/NKSC_PARAM/DSC_4484.NEF.nksc" ^
+  --nef     "<你的 DSC_3891.NEF 路径>" ^
+  --filters "d300/ncp/release/NIKON/CUSTOMPC" ^
+  --out     "_render_v3"
+```
+
+### 情形 B（T2 显示 STANDARD）—— 先让 NX Studio 生成一个模板
+
+1. 导入 30 个 NCP（`文件` → `导入自定义优化校准(&I)…` → `从文件导入`）
+2. 打开源 NEF → 套用 **01 DREAM**（我们导入的 NCP）→ 关掉/保存，让它写出 `.nksc`
+3. 把这个 `.nksc` 作为 `--template` 重跑上面的命令
+
+模板只用来提供**骨架和 `<PictureControl>` 编号**，滤镜字节仍然来自磁盘上的 NCP 文件。
+脚本不凭空构造字节，只替换 NX Studio 自己写过的东西，所以兼容性由 NX Studio 保证。
+
+脚本会逐个打印「往返 OK」，确认嵌进去的和原文件逐字节一致。
+
+---
+
+## 六、第三步：导出
+
+1. 打开 `_render_v3` 文件夹（30 份 NEF + 30 个同名 sidecar，命名规则 `原文件全名 + .nksc`）
+2. 缩略图若没变化：找「重新读取调整信息」一类命令，或重启 NX Studio
+3. `Ctrl+A` 全选 → `文件` → `导出(&E)...`
+4. 设置：**sRGB、长边 600px、质量 ≥90**，文件名选**与源文件同名**
+5. 得到 `01_DREAM.jpg` … `30_VIVID.jpg`，正好是 [real_render_check.py](../tools/real_render_check.py) 期望的命名
+
+渲完：
+
+```bash
+python d300/tools/real_render_check.py --dir real_v3
+```
+
+---
+
+## 七、已知风险与边界
+
+| 项 | 状态 |
+|---|---|
+| NX Studio 读 sidecar | **未验证** —— 第一步就是要验这个 |
+| 磁盘 NP3 能否直接嵌 | 字节层面高度一致（前 80 字节逐字节相同），但**未实机验证** |
+| 磁盘 **NCP** 能否直接嵌 | **未验证**，且 NCP 与 NP3 是两套系统，风险高于 NP3 |
+| 源 NEF | 本机 4 张 D300 NEF（DSC_4484/5658/8100/9308）经结构相关性比对**都不是**原样片 DSC_3891（相关 0.06–0.20）。方案 A 需要你提供 DSC_3891.NEF |
+| 磁盘占用 | 30 份 × 约 12 MB ≈ 360 MB |
+| 色彩程序 | 仍然必须设「**与照相机兼容**」，两处都要（首选项 + 编辑面板），这一点与 sidecar 无关 |
+
+---
+
+## 八、如果这条路走不通
+
+回退到 [12-render-new-samples.md](12-render-new-samples.md)：逐个套用、逐个导出，30 次。
+建议仍然**先渲 01 DREAM + 17 CHARCOAL 两张**验证色彩程序设置，别一次渲 30 张白干。
