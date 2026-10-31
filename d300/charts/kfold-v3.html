@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html Lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第三版：把留出验证换成 8 折 · D300 自定义曲线对齐 NP3</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1d2127;--ink2:#5b6472;--ink3:#8b95a3;--line:#e3e6eb;
+ --blue:#2f6fd0;--blue-bg:#eef3fc;--orange:#c26a1a;--orange-bg:#fdf3e8;
+ --green:#2f8a5b;--green-bg:#ebf6f0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+ font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
+.wrap{max-width:880px;margin:0 auto;padding:44px 24px 72px}
+header{margin-bottom:26px}
+.kicker{font-size:12.5px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-bottom:10px}
+h1{font-size:29px;line-height:1.35;margin:0 0 12px;letter-spacing:-.01em}
+.lede{font-size:16px;color:var(--ink2);margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px 26px;margin:20px 0}
+h2{font-size:19px;margin:0 0 12px;letter-spacing:-.01em}
+h2 .n{color:var(--ink3);font-weight:600;margin-right:9px;font-variant-numeric:tabular-nums}
+p{margin:0 0 12px}
+.muted{color:var(--ink2)}
+code{font-family:"Cascadia Mono",Consolas,monospace;font-size:13px;background:#f0f2f5;
+ padding:1px 5px;border-radius:4px;color:#2c3440}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12.5px;color:var(--ink3);font-weight:600;border-bottom:1.5px solid var(--line)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+.kpi{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0 4px}
+.kpi div{flex:1 1 150px;background:#fafbfc;border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi b{display:block;font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--ink3)}
+.note{background:var(--orange-bg);border-left:3px solid var(--orange);border-radius:0 8px 8px 0;
+ padding:12px 16px;font-size:14px;color:#7a4a12;margin:14px 0}
+.good{background:var(--green-bg);border-left:3px solid var(--green);border-radius:0 8px 8px 0;
+ padding:12px 16px;font-size:14px;color:#1e6440;margin:14px 0}
+.legend{display:flex;gap:18px;font-size:12.5px;color:var(--ink2);margin:4px 0 10px}
+.legend i{display:inline-block;width:22px;height:7px;border-radius:2px;margin-right:6px;vertical-align:1px}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <div class="kicker">D300 自定义 Picture Control · 第三版</div>
+  <h1>把「留出验证」从上下半幅换成 8 折</h1>
+  <p class="lede">30 对同机位样片，与尼康工坊「最新优化校准」逐像素比对。
+  第一版 7.94 级 → 第二版 6.17 → <b>第三版 5.98 级</b>。增量几乎全部来自一支：
+  <code>DEEPTONE_MONOCHROME</code> 从 12.23 降到 8.76 —— 它上一版被一个错误的验证切法判成「不用动」。</p>
+</header>
+
+<div class="kpi">
+  <div><b>5.98</b><span>30 支平均差（0–255 级）</span></div>
+  <div><b>−24.7%</b><span>相对第一版 7.94</span></div>
+  <div><b>25 / 5 / 0</b><span>变好 / 不变 / 变差</span></div>
+  <div><b>1.36</b><span>亮度差 |ΔL*|（彩度差 4.09）</span></div>
+</div>
+
+<section class="card">
+  <h2><span class="n">01</span>三版对照：逐支</h2>
+  <div class="legend">
+    <span><i style="background:#b7bec9"></i>第一版</span>
+    <span><i style="background:#2f6fd0"></i>第三版</span>
+  </div>
+  <p class="muted">灰色是每一支第一版的位置，蓝色是第三版。右侧数字为 <code>第一版 → 第三版</code>。
+  口径：三通道逐像素绝对差均值，全部由 <code>audit_release.py</code> 从文件本身重算。</p>
+  <svg viewBox="0 0 800 674" width="100%" role="img">
+<line x1="162.0" y1="22" x2="162.0" y2="664" stroke="#e3e6eb" stroke-width="1"/>
+<text x="162.0" y="17" fill="#8b95a3" font-size="10.5" text-anchor="middle">0</text>
+<line x1="256.5" y1="22" x2="256.5" y2="664" stroke="#e3e6eb" stroke-width="1"/>
+<text x="256.5" y="17" fill="#8b95a3" font-size="10.5" text-anchor="middle">4</text>
+<line x1="351.1" y1="22" x2="351.1" y2="664" stroke="#e3e6eb" stroke-width="1"/>
+<text x="351.1" y="17" fill="#8b95a3" font-size="10.5" text-anchor="middle">8</text>
+<line x1="445.6" y1="22" x2="445.6" y2="664" stroke="#e3e6eb" stroke-width="1"/>
+<text x="445.6" y="17" fill="#8b95a3" font-size="10.5" text-anchor="middle">12</text>
+<line x1="540.2" y1="22" x2="540.2" y2="664" stroke="#e3e6eb" stroke-width="1"/>
+<text x="540.2" y="17" fill="#8b95a3" font-size="10.5" text-anchor="middle">16</text>
+<text x="0" y="40.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">01</text>
+<text x="26" y="40.0" fill="#5b6472" font-size="10.5">DREAM</text>
+<rect x="162" y="33.0" width="230.9" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="40.0" width="221.5" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="40.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">9.77</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">9.37</tspan></text>
+<text x="0" y="61.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">02</text>
+<text x="26" y="61.0" fill="#5b6472" font-size="10.5">MORNING</text>
+<rect x="162" y="54.0" width="279.1" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="61.0" width="279.1" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="61.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">11.81</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">11.81</tspan></text>
+<text x="0" y="82.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">03</text>
+<text x="26" y="82.0" fill="#5b6472" font-size="10.5">POP</text>
+<rect x="162" y="75.0" width="140.9" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="82.0" width="100.7" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="82.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">5.96</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">4.26</tspan></text>
+<text x="0" y="103.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">04</text>
+<text x="26" y="103.0" fill="#5b6472" font-size="10.5">SUNDAY</text>
+<rect x="162" y="96.0" width="107.8" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="103.0" width="87.2" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="103.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.56</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.69</tspan></text>
+<text x="0" y="124.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">05</text>
+<text x="26" y="124.0" fill="#5b6472" font-size="10.5">SOMBER</text>
+<rect x="162" y="117.0" width="144.2" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="124.0" width="136.6" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="124.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">6.10</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">5.78</tspan></text>
+<text x="0" y="145.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">06</text>
+<text x="26" y="145.0" fill="#5b6472" font-size="10.5">DRAMA</text>
+<rect x="162" y="138.0" width="173.3" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="145.0" width="129.5" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="145.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">7.33</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">5.48</tspan></text>
+<text x="0" y="166.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">07</text>
+<text x="26" y="166.0" fill="#5b6472" font-size="10.5">SILENCE</text>
+<rect x="162" y="159.0" width="245.3" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="166.0" width="151.5" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="166.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">10.38</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">6.41</tspan></text>
+<text x="0" y="187.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">08</text>
+<text x="26" y="187.0" fill="#5b6472" font-size="10.5">BLEACH</text>
+<rect x="162" y="180.0" width="247.0" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="187.0" width="179.6" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="187.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">10.45</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">7.60</tspan></text>
+<text x="0" y="208.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">09</text>
+<text x="26" y="208.0" fill="#5b6472" font-size="10.5">MELANCHOLIC</text>
+<rect x="162" y="201.0" width="229.0" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="208.0" width="190.3" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="208.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">9.69</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">8.05</tspan></text>
+<text x="0" y="229.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">10</text>
+<text x="26" y="229.0" fill="#5b6472" font-size="10.5">PURE</text>
+<rect x="162" y="222.0" width="301.6" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="229.0" width="255.3" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="229.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">12.76</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">10.80</tspan></text>
+<text x="0" y="250.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">11</text>
+<text x="26" y="250.0" fill="#5b6472" font-size="10.5">DENIM</text>
+<rect x="162" y="243.0" width="312.9" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="250.0" width="312.9" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="250.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">13.24</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">13.24</tspan></text>
+<text x="0" y="271.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">12</text>
+<text x="26" y="271.0" fill="#5b6472" font-size="10.5">TOY</text>
+<rect x="162" y="264.0" width="288.8" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="271.0" width="275.4" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="271.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">12.22</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">11.65</tspan></text>
+<text x="0" y="292.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">13</text>
+<text x="26" y="292.0" fill="#5b6472" font-size="10.5">SEPIA</text>
+<rect x="162" y="285.0" width="308.2" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="292.0" width="167.8" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="292.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">13.04</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">7.10</tspan></text>
+<text x="0" y="313.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">14</text>
+<text x="26" y="313.0" fill="#5b6472" font-size="10.5">BLUE</text>
+<rect x="162" y="306.0" width="378.2" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="313.0" width="146.5" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="313.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">16.00</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">6.20</tspan></text>
+<text x="0" y="334.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">15</text>
+<text x="26" y="334.0" fill="#5b6472" font-size="10.5">RED</text>
+<rect x="162" y="327.0" width="373.9" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="334.0" width="268.7" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="334.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">15.82</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">11.37</tspan></text>
+<text x="0" y="355.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">16</text>
+<text x="26" y="355.0" fill="#5b6472" font-size="10.5">PINK</text>
+<rect x="162" y="348.0" width="299.7" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="355.0" width="174.0" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="355.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">12.68</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">7.36</tspan></text>
+<text x="0" y="376.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">17</text>
+<text x="26" y="376.0" fill="#5b6472" font-size="10.5">CHARCOAL</text>
+<rect x="162" y="369.0" width="73.7" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="376.0" width="44.7" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="376.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">3.12</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">1.89</tspan></text>
+<text x="0" y="397.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">18</text>
+<text x="26" y="397.0" fill="#5b6472" font-size="10.5">GRAPHITE</text>
+<rect x="162" y="390.0" width="104.7" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="397.0" width="72.6" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="397.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.43</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.07</tspan></text>
+<text x="0" y="418.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">19</text>
+<text x="26" y="418.0" fill="#5b6472" font-size="10.5">BINARY</text>
+<rect x="162" y="411.0" width="81.5" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="418.0" width="81.8" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="418.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">3.45</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.46</tspan></text>
+<text x="0" y="439.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">20</text>
+<text x="26" y="439.0" fill="#5b6472" font-size="10.5">CARBON</text>
+<rect x="162" y="432.0" width="110.4" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="439.0" width="62.9" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="439.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.67</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">2.66</tspan></text>
+<text x="0" y="460.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">21</text>
+<text x="26" y="460.0" fill="#5b6472" font-size="10.5">FLAT</text>
+<rect x="162" y="453.0" width="105.9" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="460.0" width="73.7" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="460.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.48</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.12</tspan></text>
+<text x="0" y="481.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">22</text>
+<text x="26" y="481.0" fill="#5b6472" font-size="10.5">FLAT_MONOCHROME</text>
+<rect x="162" y="474.0" width="112.3" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="481.0" width="46.1" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="481.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.75</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">1.95</tspan></text>
+<text x="0" y="502.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">23</text>
+<text x="26" y="502.0" fill="#5b6472" font-size="10.5">DEEPTONE_MONOCHROME</text>
+<rect x="162" y="495.0" width="289.1" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="502.0" width="207.1" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="502.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">12.23</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">8.76</tspan></text>
+<text x="0" y="523.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">24</text>
+<text x="26" y="523.0" fill="#5b6472" font-size="10.5">RICH_TONE_PORTRAIT</text>
+<rect x="162" y="516.0" width="80.8" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="523.0" width="80.8" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="523.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">3.42</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.42</tspan></text>
+<text x="0" y="544.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">25</text>
+<text x="26" y="544.0" fill="#5b6472" font-size="10.5">FLEXIBLE_COLOR</text>
+<rect x="162" y="537.0" width="104.7" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="544.0" width="79.9" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="544.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.43</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.38</tspan></text>
+<text x="0" y="565.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">26</text>
+<text x="26" y="565.0" fill="#5b6472" font-size="10.5">LANDSCAPE</text>
+<rect x="162" y="558.0" width="94.8" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="565.0" width="85.8" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="565.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.01</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.63</tspan></text>
+<text x="0" y="586.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">27</text>
+<text x="26" y="586.0" fill="#5b6472" font-size="10.5">MONOCHROME</text>
+<rect x="162" y="579.0" width="133.1" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="586.0" width="70.4" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="586.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">5.63</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">2.98</tspan></text>
+<text x="0" y="607.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">28</text>
+<text x="26" y="607.0" fill="#5b6472" font-size="10.5">NEUTRAL</text>
+<rect x="162" y="600.0" width="87.7" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="607.0" width="75.6" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="607.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">3.71</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.20</tspan></text>
+<text x="0" y="628.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">29</text>
+<text x="26" y="628.0" fill="#5b6472" font-size="10.5">STANDARD</text>
+<rect x="162" y="621.0" width="81.5" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="628.0" width="81.5" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="628.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">3.45</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">3.45</tspan></text>
+<text x="0" y="649.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace">30</text>
+<text x="26" y="649.0" fill="#5b6472" font-size="10.5">VIVID</text>
+<rect x="162" y="642.0" width="107.3" height="5" rx="2" fill="#b7bec9"/>
+<rect x="162" y="649.0" width="97.9" height="5" rx="2" fill="#2f6fd0"/>
+<text x="560" y="649.0" fill="#8b95a3" font-size="11" font-family="Consolas,monospace"><tspan fill="#b7bec9">4.54</tspan><tspan fill="#8b95a3"> → </tspan><tspan fill="#2f6fd0" font-weight="700">4.14</tspan></text>
+</svg>
+</section>
+
+<section class="card">
+  <h2><span class="n">02</span>分组</h2>
+  <div class="legend">
+    <span><i style="background:#b7bec9"></i>第一版</span>
+    <span><i style="background:#7fa3d8"></i>第二版</span>
+    <span><i style="background:#2f6fd0"></i>第三版</span>
+  </div>
+  <svg viewBox="0 0 800 352" width="100%" role="img">
+<line x1="130.0" y1="18" x2="130.0" y2="346" stroke="#e3e6eb" stroke-width="1"/>
+<line x1="273.3" y1="18" x2="273.3" y2="346" stroke="#e3e6eb" stroke-width="1"/>
+<line x1="416.7" y1="18" x2="416.7" y2="346" stroke="#e3e6eb" stroke-width="1"/>
+<line x1="560.0" y1="18" x2="560.0" y2="346" stroke="#e3e6eb" stroke-width="1"/>
+<text x="124" y="52.0" fill="#1d2127" font-size="12.5" text-anchor="end">单色 17–20</text>
+<rect x="130" y="32.0" width="112.4" height="11" rx="2" fill="#b7bec9"/>
+<text x="249.4" y="41.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">3.92</text>
+<rect x="130" y="47.0" width="79.4" height="11" rx="2" fill="#7fa3d8"/>
+<text x="216.4" y="56.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">2.77</text>
+<rect x="130" y="62.0" width="79.4" height="11" rx="2" fill="#2f6fd0"/>
+<text x="216.4" y="71.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">2.77</text>
+<text x="124" y="116.0" fill="#1d2127" font-size="12.5" text-anchor="end">新系统 21–30</text>
+<rect x="130" y="96.0" width="145.1" height="11" rx="2" fill="#b7bec9"/>
+<text x="282.1" y="105.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">5.06</text>
+<rect x="130" y="111.0" width="122.7" height="11" rx="2" fill="#7fa3d8"/>
+<text x="259.7" y="120.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">4.28</text>
+<rect x="130" y="126.0" width="108.9" height="11" rx="2" fill="#2f6fd0"/>
+<text x="245.9" y="135.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">3.80</text>
+<text x="124" y="180.0" fill="#1d2127" font-size="12.5" text-anchor="end">彩色创意 01–12</text>
+<rect x="130" y="160.0" width="272.9" height="11" rx="2" fill="#b7bec9"/>
+<text x="409.9" y="169.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">9.52</text>
+<rect x="130" y="175.0" width="235.1" height="11" rx="2" fill="#7fa3d8"/>
+<text x="372.1" y="184.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">8.20</text>
+<rect x="130" y="190.0" width="234.5" height="11" rx="2" fill="#2f6fd0"/>
+<text x="371.5" y="199.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">8.18</text>
+<text x="124" y="244.0" fill="#1d2127" font-size="12.5" text-anchor="end">调色 13–16</text>
+<rect x="130" y="224.0" width="412.2" height="11" rx="2" fill="#b7bec9"/>
+<text x="549.2" y="233.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">14.38</text>
+<rect x="130" y="239.0" width="234.8" height="11" rx="2" fill="#7fa3d8"/>
+<text x="371.8" y="248.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">8.19</text>
+<rect x="130" y="254.0" width="229.6" height="11" rx="2" fill="#2f6fd0"/>
+<text x="366.6" y="263.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">8.01</text>
+<text x="124" y="308.0" fill="#1d2127" font-size="12.5" text-anchor="end">全部 30 支</text>
+<rect x="130" y="288.0" width="227.6" height="11" rx="2" fill="#b7bec9"/>
+<text x="364.6" y="297.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">7.94</text>
+<rect x="130" y="303.0" width="176.9" height="11" rx="2" fill="#7fa3d8"/>
+<text x="313.9" y="312.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">6.17</text>
+<rect x="130" y="318.0" width="171.4" height="11" rx="2" fill="#2f6fd0"/>
+<text x="308.4" y="327.5" fill="#5b6472" font-size="11" font-family="Consolas,monospace">5.98</text>
+</svg>
+  <table>
+    <tr><th>分组</th><th class="num">数量</th><th class="num">第一版</th><th class="num">第二版</th><th class="num">第三版</th></tr>
+    <tr><td>单色 17–20</td><td class="num">4</td><td class="num">3.92</td><td class="num">2.77</td><td class="num"><b>2.77</b></td></tr>
+    <tr><td>新系统 21–30</td><td class="num">10</td><td class="num">5.06</td><td class="num">4.28</td><td class="num"><b>3.80</b></td></tr>
+    <tr><td>彩色创意 01–12</td><td class="num">12</td><td class="num">9.52</td><td class="num">8.20</td><td class="num"><b>8.18</b></td></tr>
+    <tr><td>调色 13–16</td><td class="num">4</td><td class="num">14.38</td><td class="num">8.19</td><td class="num"><b>8.01</b></td></tr>
+    <tr><td><b>全部</b></td><td class="num"><b>30</b></td><td class="num"><b>7.94</b></td><td class="num"><b>6.17</b></td><td class="num"><b>5.98</b></td></tr>
+  </table>
+</section>
+
+<section class="card">
+  <h2><span class="n">03</span>换的是哪把尺子</h2>
+  <p>第二版用「上半幅拟合、下半幅打分」决定一支要不要动。这个切法暗含一个假设：
+  <b>照片上下两半的亮度分布相同</b>。真实照片不满足。</p>
+  <p><code>DEEPTONE_MONOCHROME</code> 是反例：上半幅拟合的曲线拿到下半幅打分，收益为 0，于是判「不动」；
+  可它的 <code>|ΔL*|</code> 是 4.95（30 支平均 1.43），影调差客观存在。换成 8 折后，
+  同一支在「7/8 像素拟合、1/8 打分」上的平均收益是 −2.68 级 —— 那条曲线在没见过的像素上确实可复现。</p>
+  <svg viewBox="0 0 800 242" width="100%" role="img">
+<line x1="208.0" y1="12" x2="208.0" y2="234" stroke="#e3e6eb" stroke-width="1"/>
+<text x="208.0" y="8" fill="#8b95a3" font-size="10.5" text-anchor="middle">0%</text>
+<line x1="360.5" y1="12" x2="360.5" y2="234" stroke="#e3e6eb" stroke-width="1"/>
+<text x="360.5" y="8" fill="#8b95a3" font-size="10.5" text-anchor="middle">10%</text>
+<line x1="512.9" y1="12" x2="512.9" y2="234" stroke="#e3e6eb" stroke-width="1"/>
+<text x="512.9" y="8" fill="#8b95a3" font-size="10.5" text-anchor="middle">20%</text>
+<text x="192" y="34.0" fill="#1d2127" font-size="13" text-anchor="end">上/下半幅</text>
+<text x="192" y="50.0" fill="#8b95a3" font-size="11" text-anchor="end">第二版的做法</text>
+<rect x="208" y="28.0" width="65.6" height="13" rx="3" fill="#d5dae1"/>
+<text x="281.6" y="39.0" fill="#5b6472" font-size="12" font-weight="700" font-family="Consolas,monospace">22.3%</text>
+<text x="192" y="88.0" fill="#1d2127" font-size="13" text-anchor="end">2×2 棋盘</text>
+<text x="192" y="104.0" fill="#8b95a3" font-size="11" text-anchor="end">更保守，判定偏多</text>
+<rect x="208" y="82.0" width="44.2" height="13" rx="3" fill="#7fa3d8"/>
+<text x="260.2" y="93.0" fill="#5b6472" font-size="12" font-weight="700" font-family="Consolas,monospace">20.9%</text>
+<text x="192" y="142.0" fill="#1d2127" font-size="13" text-anchor="end">8×8 棋盘</text>
+<text x="192" y="158.0" fill="#8b95a3" font-size="11" text-anchor="end">训练集≈测试集，不可用</text>
+<rect x="208" y="136.0" width="97.6" height="13" rx="3" fill="#d5dae1"/>
+<text x="313.6" y="147.0" fill="#5b6472" font-size="12" font-weight="700" font-family="Consolas,monospace">24.4%</text>
+<text x="192" y="196.0" fill="#1d2127" font-size="13" text-anchor="end">2×4 = 8 折</text>
+<text x="192" y="212.0" fill="#8b95a3" font-size="11" text-anchor="end">第三版采用</text>
+<rect x="208" y="190.0" width="102.1" height="13" rx="3" fill="#2f6fd0"/>
+<text x="318.1" y="201.0" fill="#2f6fd0" font-size="12" font-weight="700" font-family="Consolas,monospace">24.7%</text>
+</svg>
+  <div class="note"><b>为什么不用数字最好的 8×8 棋盘：</b>块只有约 52 像素，块内像素高度相关，
+  训练集和测试集几乎是同一批内容，交叉验证退化成自己考自己。8 折的每块有 2 万多像素，且真正不相交。</div>
+</section>
+
+<section class="card">
+  <h2><span class="n">04</span>残差已经不在影调上</h2>
+  <p>换成 CIELAB 口径把 RGB 平均差拆开，第三版实测（30 支平均）：</p>
+  <table>
+    <tr><th>量</th><th class="num">全部 30</th><th class="num">单色 11</th><th class="num">彩色 19</th></tr>
+    <tr><td>ΔE00 均值</td><td class="num">4.61</td><td class="num">3.49</td><td class="num">5.26</td></tr>
+    <tr><td>可辨像素比（ΔE00 &gt; 2.3）</td><td class="num">57.5%</td><td class="num">41.5%</td><td class="num">66.8%</td></tr>
+    <tr><td><b>亮度差 |ΔL*|</b></td><td class="num"><b>1.36</b></td><td class="num"><b>1.79</b></td><td class="num"><b>1.11</b></td></tr>
+    <tr><td><b>彩度差 |ΔC*|</b></td><td class="num"><b>4.09</b></td><td class="num"><b>2.42</b></td><td class="num"><b>5.05</b></td></tr>
+    <tr><td>色相色差 |ΔH*ab|</td><td class="num">3.23</td><td class="num">1.38</td><td class="num">4.30</td></tr>
+  </table>
+  <div class="good"><b>影调这一项已经打平</b>：彩色 19 支的平均亮度差只有 1.11 级，在 ΔE00 里占不到 0.5。
+  剩下的全在彩度上，是亮度差的 3–4 倍。最干净的两支：<code>CHARCOAL</code> ΔE00 <b>0.62</b>、
+  可辨像素 <b>2.4%</b>；<code>FLAT_MONOCHROME</code> 0.62 / 3.3% —— 基本算复刻。</div>
+</section>
+
+<section class="card">
+  <h2><span class="n">05</span>天花板：颜色要按色相分区，而 NCP 只有一个全局值</h2>
+  <p>当前最差的 <code>MORNING</code>（ΔE00 12.41），把偏差按参考图的色相扇区拆开：</p>
+  <svg viewBox="0 0 800 250" width="100%" role="img">
+<line x1="66" y1="118" x2="760" y2="118" stroke="#c9ced6" stroke-width="1.2"/>
+<text x="60" y="112" fill="#8b95a3" font-size="11" text-anchor="end">0°</text>
+<rect x="74.0" y="118.0" width="48" height="5.8" rx="2" fill="#c1743f" opacity=".85"/>
+<text x="98.0" y="136.8" fill="#5b6472" font-size="11" text-anchor="middle">-4</text>
+<text x="98.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">0–30</text>
+<rect x="136.0" y="108.0" width="48" height="10.0" rx="2" fill="#5b8fd8" opacity=".85"/>
+<text x="160.0" y="103.0" fill="#5b6472" font-size="11" text-anchor="middle">+7</text>
+<text x="160.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">30–60</text>
+<rect x="198.0" y="85.9" width="48" height="32.1" rx="2" fill="#5b8fd8" opacity=".85"/>
+<text x="222.0" y="80.9" fill="#5b6472" font-size="11" text-anchor="middle">+24</text>
+<text x="222.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">60–90</text>
+<rect x="260.0" y="88.8" width="48" height="29.2" rx="2" fill="#5b8fd8" opacity=".85"/>
+<text x="284.0" y="83.8" fill="#5b6472" font-size="11" text-anchor="middle">+22</text>
+<text x="284.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">90–120</text>
+<rect x="322.0" y="53.2" width="48" height="64.8" rx="2" fill="#5b8fd8" opacity=".85"/>
+<text x="346.0" y="48.2" fill="#5b6472" font-size="11" text-anchor="middle">+48</text>
+<text x="346.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">120–150</text>
+<rect x="384.0" y="26.2" width="48" height="91.8" rx="2" fill="#5b8fd8" opacity=".85"/>
+<text x="408.0" y="21.2" fill="#5b6472" font-size="11" text-anchor="middle">+68</text>
+<text x="408.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">150–180</text>
+<rect x="446.0" y="118.0" width="48" height="68.7" rx="2" fill="#c1743f" opacity=".85"/>
+<text x="470.0" y="199.7" fill="#5b6472" font-size="11" text-anchor="middle">-51</text>
+<text x="470.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">180–210</text>
+<rect x="508.0" y="118.0" width="48" height="67.5" rx="2" fill="#c1743f" opacity=".85"/>
+<text x="532.0" y="198.5" fill="#5b6472" font-size="11" text-anchor="middle">-50</text>
+<text x="532.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">210–240</text>
+<rect x="570.0" y="118.0" width="48" height="46.4" rx="2" fill="#c1743f" opacity=".85"/>
+<text x="594.0" y="177.4" fill="#5b6472" font-size="11" text-anchor="middle">-34</text>
+<text x="594.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">240–270</text>
+<rect x="632.0" y="118.0" width="48" height="22.8" rx="2" fill="#c1743f" opacity=".85"/>
+<text x="656.0" y="153.8" fill="#5b6472" font-size="11" text-anchor="middle">-17</text>
+<text x="656.0" y="216" fill="#8b95a3" font-size="10.5" text-anchor="middle">270–300</text>
+<text x="66" y="240" fill="#8b95a3" font-size="11.5">参考图色相扇区（度）</text>
+</svg>
+  <p>黄区（150–180°）要往正方向转 <b>+68°</b>，青区（180–210°）要往负方向转 <b>−51°</b> ——
+  <b>符号相反</b>。饱和度与色相滑块各只有一个全局值，任何单一角度都只能顾一半。
+  这不是参数没调好，是格式没有这个自由度。</p>
+  <p class="muted">已逐一排除的三条替代路线：换底子（固件里四个底子共用同一套色彩处理，
+  <code>STANDARD</code> 与 <code>NEUTRAL</code> 856 字节只差 36 字节）；把曲线当分通道用
+  （<code>DREAM</code> 的 LUT 最低输出 46.6，成片通道低到 9.0，不可能是逐通道套用）；
+  记录 1 里藏字段（36 字节全部拆开，余下两处 30 个文件完全一致）。</p>
+</section>
+
+<section class="card">
+  <h2><span class="n">06</span>结论</h2>
+  <p><b>影调可以做到「看不出来」，颜色只能做到「同风格」。</b>
+  前者已经被第三版兑现（|ΔL*| 1.36）；后者卡在一条亮度 LUT 加两个全局滑块上，
+  要达到真正的完全模拟，需要分色相饱和度矩阵或 R/G/B 各一条曲线，D300 的自定义曲线两样都没有。</p>
+  <p class="muted">复现：<code>cd d300 &amp;&amp; python tools/optimize_v2.py --dry</code>（评估）、
+  <code>python tools/audit_release.py</code>（独立体检，三版并排）、
+  <code>python tools/diag_residual.py</code>（CIELAB 分解）。</p>
+</section>
+
+</div></body></html>
