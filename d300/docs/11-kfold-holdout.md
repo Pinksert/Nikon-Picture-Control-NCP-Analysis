@@ -203,7 +203,7 @@ python tools/audit_release.py         # 独立体检：不拟合，按文件里�
 python tools/diag_residual.py         # CIELAB 残差分解 + 色相扇区归因
 ```
 
-`audit_release.py` 会顺手写出 `samples/metrics.csv`（v1 / v2 / 当前版三列）——
+`audit_release.py` 会顺手写出 `samples/metrics.csv`（`e_v1` / `e_v2` / `e_v3` 三列）——
 这是 README 里所有数字的唯一来源，全部由文件本身反算。
 
 历史版本：`ncp/release_v1/`（只做影调）、`ncp/release_v2/`（启用滑块 + 上下半幅验证）。
