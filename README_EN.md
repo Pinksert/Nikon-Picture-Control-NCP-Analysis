@@ -7,6 +7,13 @@ convert newer `.NP2` / `.NP3` presets down to `.NCP` — the only format old
 bodies (Nikon D300 / D300S / D90 …) can read.
 
 All numbers in this document were measured on real files, not guessed.
+
+> **See the results**: all 30 latest-revision NCP presets compared pixel-by-pixel
+> against the current-generation Picture Control exports — [online report
+> (30 side-by-side triptychs + full data table)](https://pinksert.github.io/Nikon-Picture-Control-NCP-Analysis/d300/charts/v3-gap.html),
+> [rank chart](d300/charts/v3-gap-rank.jpg),
+> [metrics CSV](d300/samples/metrics_v3_full.csv). Summary: 7.93 -> 5.98 levels
+> of mean absolute difference (-24.7%), 25 improved / 5 unchanged / 0 worse.
 Sample set: 42 factory presets exported by Nikon Picture Control Utility 2
 (6 × .NCP, 8 × .NP2, 28 × .NP3).
 
