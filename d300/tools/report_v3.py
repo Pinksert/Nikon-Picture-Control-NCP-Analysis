@@ -148,7 +148,7 @@ def main():
         im = triple(slot, P, R, d, de_full)
         fn = '%02d_%s.jpg' % (slot, r['en'])
         im.save(os.path.join(OUTDIR, fn), 'JPEG', quality=88, subsampling=0)
-        r['img'] = b64(im)
+        r['img'] = fn
         print('  %2d %-20s v1 %.2f → v3 %.2f 级 ｜ ΔE00 %.2f ｜ 可辨 %.0f%%'
               % (slot, r['en'] + ' ' + r['cn'], rgb1, d['rgb'], d['de'], d['pct']))
 
@@ -178,6 +178,10 @@ def main():
 
 
 def render(rows, chart, rgb, rgb1, mono, good, flat, best, worst):
+    # 图一律走独立 jpg 的相对引用（不内嵌 base64）：报告只有几十 KB，
+    # 浏览器/页面托管加载才快；本地双击打开时 ../samples/compare_v3/ 同样有效。
+    prefix = '../samples/compare_v3/'
+
     def fm(r):
         return ('<td>%d</td><td class="nm">%s <span class="cn">%s</span></td>'
                 '<td>%s</td><td>%.2f</td><td><b>%.2f</b></td><td class="%s">%+.2f</td>'
@@ -190,8 +194,9 @@ def render(rows, chart, rgb, rgb1, mono, good, flat, best, worst):
     cards = '\n'.join(
         '<div class="card"><div class="ch">%d %s <span class="cn">%s</span>'
         '<span class="num">v1 %.2f → <b>%.2f</b> 级 ｜ ΔE00 %.2f ｜ 可辨 %.0f%%</span></div>'
-        '<img src="data:image/jpeg;base64,%s"></div>'
-        % (r['slot'], r['en'], r['cn'], r['rgb1'], r['rgb'], r['de'], r['pct'], r['img'])
+        '<img src="%s%s" loading="lazy"></div>'
+        % (r['slot'], r['en'], r['cn'], r['rgb1'], r['rgb'], r['de'], r['pct'],
+           prefix, r['img'])
         for r in rows)
     bests = '、'.join('%s（%.2f 级）' % (r['en'], r['rgb']) for r in best)
     worsts = '、'.join('%s（%.2f 级）' % (r['en'], r['rgb']) for r in worst)
@@ -237,7 +242,7 @@ img.rank{width:100%%;border:1px solid #e3e6ea;border-radius:8px;background:#fff}
 两列同一口径可比，但 v3 是估计值，真实数字要靠新一轮真渲染才能坐实。</div>
 
 <h2>差距排名（30 支）</h2>
-<img class="rank" src="data:image/jpeg;base64,%s">
+<img class="rank" src="v3-gap-rank.jpg">
 
 <h2>结论速览</h2>
 <ul>
@@ -266,7 +271,6 @@ img.rank{width:100%%;border:1px solid #e3e6ea;border-radius:8px;background:#fff}
         float(np.mean([r['de'] for r in rows])),
         float(np.mean([r['pct'] for r in rows])),
         good, good + flat,
-        b64(chart, 90),
         bests, worsts,
         int(mono.sum()), rgb[mono].mean(), int((~mono).sum()), rgb[~mono].mean(),
         float(np.mean([r['dL'] for r in rows])), float(np.mean([r['dC'] for r in rows])),
