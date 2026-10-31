@@ -69,7 +69,7 @@ def main():
     only = '--only' in sys.argv
     vdirs = [] if only else version_dirs()
     heads = ' '.join('%6s' % n.replace('_', '') for n, _ in vdirs)
-    cur = 'v%d' % (len(vdirs) + 1) if vdirs else '本次'
+    cur = 'v%d' % (len(vdirs) + 1)
     print('%-14s %-24s %4s %5s %-23s %s %6s  %s'
           % ('文件', '滤镜', '字节', '底子', '八滑块', heads, cur, '体检'))
     print('-' * (104 + 7 * len(vdirs)))
@@ -114,8 +114,8 @@ def main():
     out = os.path.join(ROOT, 'samples', 'metrics.csv')
     vn = [n for n, _ in vdirs]
     with open(out, 'w', encoding='utf-8-sig', newline='') as f:
-        f.write('slot,en,cn,base,sliders,%s,e_cur,delta\n'
-                % ','.join('e_%s' % v for v in vn))
+        f.write('slot,en,cn,base,sliders,%s,e_%s,delta\n'
+                % (','.join('e_%s' % v for v in vn), cur))
         for slot, hist, e3, base, sl in rows:
             f.write('%d,%s,%s,0x%04X,%s,%s,%.2f,%+.2f\n'
                     % (slot, A.NAMES[slot - 1], A.CN[slot - 1], base, sl,
