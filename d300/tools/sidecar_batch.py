@@ -81,29 +81,70 @@ def fixup(disk_bytes):
 
 # ---------------------------------------------------------------- 基础读写
 
+SLOT_NAMES = ['DREAM', 'MORNING', 'POP', 'SUNDAY', 'SOMBER', 'DRAMA', 'SILENCE', 'BLEACH', 'MELANCHOLIC', 'PURE', 'DENIM', 'TOY', 'SEPIA', 'BLUE', 'RED', 'PINK', 'CHARCOAL', 'GRAPHITE', 'BINARY', 'CARBON', 'FLAT', 'FLAT_MONOCHROME', 'DEEPTONE_MONOCHROME', 'RICH_TONE_PORTRAIT', 'FLEXIBLE_COLOR', 'LANDSCAPE', 'MONOCHROME', 'NEUTRAL', 'STANDARD', 'VIVID']   # PICCON01..30 的正式名字（与 release/README.md 一致）
+
+
+def slot_stem(fn):
+    """PICCON01.NCP → 01_DREAM（real_render_check.py 期望的命名）。"""
+    stem = os.path.splitext(fn)[0]
+    m = re.match(r'^PICCON(\d{1,2})$', stem, re.I)
+    if m:
+        n = int(m.group(1))
+        if 1 <= n <= len(SLOT_NAMES):
+            return '%02d_%s' % (n, SLOT_NAMES[n - 1])
+    return stem
+
+
 def read_sidecar(path):
     """返回 (原始文本, 已 unescape 的文本)。XMP 里 NineEdits 是转义过的 XML。"""
     raw = open(path, encoding='utf-8', errors='replace').read()
     return raw, html.unescape(raw)
 
 
-def embed_data(sidecar_text, filt_bytes):
-    """把滤镜文件字节塞进 <ExportData>，同步 <ExportDataSize>。
+def embed_data(sidecar_text, filt_bytes, slot02=True):
+    """把滤镜字节塞进 <ExportData> 与 <CustomData> —— 两处都要写。
 
-    注意原文本里 NineEdits 是 HTML 转义过的（&lt;filter ...），
-    所以替换必须发生在转义后的文本上，并且 base64 里不能有换行以外的东西。
+    实测（2026-10-31）：套用「自定义优化校准」（导入的 NCP）时，NX Studio 会在
+    sidecar 里写**两份**滤镜数据，而套用内置滤镜只有一份：
+
+        <Export><ExportData>   ← 当前应用态：第 38 字节被写成 0x02
+        <Custom><CustomData>   ← 滤镜原始定义：与磁盘文件一致（该字节 0x00）
+
+    只替换其中一份 → NX Studio 直接回落成 STANDARD（V4 探针失败的真因）。
     """
-    b64 = base64.b64encode(filt_bytes).decode('ascii')
-    # 原 sidecar 的 base64 是每 64 字符一行，照抄格式，减小 diff
-    b64 = '\n'.join(b64[i:i + 64] for i in range(0, len(b64), 64))
-    pat = re.compile(r'(<ExportData>).*?(</ExportData>)', re.S)
-    if not pat.search(sidecar_text):
+    e = bytearray(filt_bytes)
+    c = bytearray(filt_bytes)
+    if slot02 and len(e) > 38:
+        e[38] = 0x02                       # 复刻 NX Studio 应用态的那个字节
+    out, ok1 = _embed_one(sidecar_text, 'ExportData', bytes(e))
+    out, ok2 = _embed_one(out, 'CustomData', bytes(c))
+    if not ok1:
         raise SystemExit('模板里找不到 <ExportData>，不是有效的调整文件')
-    out = pat.sub(lambda m: m.group(1) + b64 + m.group(2), sidecar_text, count=1)
-    out = re.sub(r'(<ExportDataSize>)\d+(</ExportDataSize>)',
-                 lambda m: m.group(1) + str(len(filt_bytes)) + m.group(2),
-                 out, count=1)
     return out
+
+
+def _embed_one(txt, tag, data):
+    """替换单个 <tag>：base64 每 60 字符一行，与 NX Studio 的排版一致。
+
+    模板里的 XMP 是 HTML 转义过的（&lt;ExportData&gt;、换行 &#xA;），
+    两种形态都支持：按输入文本自动判断，并保持原来的形态输出。
+    """
+    esc = '&lt;' in txt
+    lt, gt = ('&lt;', '&gt;') if esc else ('<', '>')
+    nl = '&#xA;' if esc else '\n'
+    s = base64.b64encode(data).decode('ascii')
+    chunk = [s[k:k + 60] for k in range(0, len(s), 60)]
+    blk = nl.join(chunk) + nl               # 末尾也带一个换行，与亲生模板一致
+    pat = re.compile(r'(%s%s%s).*?(%s/%s%s)' % (lt, tag, gt, lt, tag, gt), re.S)
+    if not pat.search(txt):
+        return txt, False
+    out = pat.sub(lambda m: m.group(1) + blk + m.group(2), txt, count=1)
+    # <ExportDataSize> 记的是 base64 文本长度（含全部换行），不是滤镜字节数
+    size = len(s) + len(chunk)
+    sp = re.compile(r'(%s%sSize%s)\d+(%s/%sSize%s)' % (lt, tag, gt, lt, tag, gt))
+    out = sp.sub(lambda m: m.group(1) + str(size) + m.group(2), out, count=1)
+    return out, True
+
 
 
 def set_field(sidecar_text, tag, value):
@@ -121,6 +162,15 @@ def get_field(sidecar_text, tag):
 def export_data(sidecar_text):
     s = html.unescape(sidecar_text)
     m = re.search(r'<ExportData>(.*?)</ExportData>', s, re.S)
+    if not m:
+        return None
+    return base64.b64decode(''.join(m.group(1).split()))
+
+
+def custom_data(sidecar_text):
+    """<CustomData> 里的滤镜字节（自定义优化校准才有这一处）。"""
+    s = html.unescape(sidecar_text)
+    m = re.search(r'<CustomData>(.*?)</CustomData>', s, re.S)
     if not m:
         return None
     return base64.b64decode(''.join(m.group(1).split()))
@@ -228,7 +278,7 @@ def cmd_make(args):
             raise SystemExit('找不到：%s' % p)
     os.makedirs(out, exist_ok=True)
 
-    _, tpl_txt = read_sidecar(tpl_path)
+    raw_txt, tpl_txt = read_sidecar(tpl_path)
     pid = get_field(tpl_txt, 'PictureControl')
     print('模板：%s' % os.path.basename(tpl_path))
     print('  模板内嵌滤镜 = %s（%d 字节），PictureControl = %s'
@@ -242,7 +292,7 @@ def cmd_make(args):
     print('  滤镜 %d 个，源 NEF：%s\n' % (len(files), os.path.basename(nef)))
 
     for i, fn in enumerate(files, 1):
-        stem = os.path.splitext(fn)[0]
+        stem = slot_stem(fn)
         fb = open(os.path.join(fdir, fn), 'rb').read()
         # PictureControl 编号沿用模板，不猜：
         # 同一批滤镜（都是自定义优化校准）编号应当一致，猜错反而会出事
@@ -253,13 +303,20 @@ def cmd_make(args):
             except ValueError as e:
                 print('  %02d %-22s 跳过：%s' % (i, stem, e))
                 continue
-        txt = embed_data(tpl_txt, used)
+        txt = embed_data(raw_txt, used, slot02=not args.no_slot_byte)
         if not args.dry_run:
             copy_nef(nef, os.path.join(out, stem + '.NEF'))
             write_sidecar(os.path.join(out, stem + '.NEF.nksc'), txt)
-        ok = export_data(txt) == used
-        print('  %02d %-22s %-11s %3d→%-3d 字节  往返%s'
-              % (i, stem, filt_name(fb), len(fb), len(used), 'OK' if ok else '失败'))
+        got = export_data(txt)
+        # ExportData 的第 38 字节会被写成 0x02（应用态），比对时跳过这一位
+        ok = (got == used) or (
+            len(got) == len(used) and got[:38] == used[:38] and got[39:] == used[39:])
+        cb = custom_data(txt)
+        ok2 = (cb is None) or (cb == used)
+        print('  %02d %-22s %-20s %3d→%-3d 字节  往返%s'
+              % (i, stem, filt_name(fb), len(fb), len(used),
+                 'OK' if (ok and ok2) else '失败(Export%s/Custom%s)'
+                 % ('OK' if ok else 'X', 'OK' if ok2 else 'X')))
 
     print("""
 生成完毕：%s
@@ -344,6 +401,8 @@ def main():
                    help='只检查能否正确嵌入并打印清单，不写文件')
     m.add_argument('--fixup', action='store_true',
                    help='对磁盘文件先做补齐（NP3 布局需要；NCP 会自动跳过）')
+    m.add_argument('--no-slot-byte', action='store_true',
+                   help='ExportData 第 38 字节不写 0x02（默认写，与 NX Studio 应用态一致）')
 
     args = ap.parse_args()
     if args.cmd == 'probe':
