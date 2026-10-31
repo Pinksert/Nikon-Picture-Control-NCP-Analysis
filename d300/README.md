@@ -343,6 +343,7 @@ d300/
 │   ├── optimize_v2.py            ★ 第二版：滑块标定 + 留出验证 + 生成 ncp/release/
 │   ├── audit_release.py          ★ 独立体检：不拟合，按文件里存的曲线/滑块重算，并写 metrics.csv
 │   ├── verify_vs_np3.py          ★ 字段级校对：把 NCP 和它的原始 NP3 拆开逐项并排
+│   ├── scan_fit_params.py        拟合参数扫描：证明 nb=44 / clamp=6 已是局部最优
 │   ├── compensate.py             H 的定义与曲线预补偿
 │   ├── compare_samples.py        成片对比：指标计算 + 并排出图
 │   └── …
