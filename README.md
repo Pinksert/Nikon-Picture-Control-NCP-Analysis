@@ -419,12 +419,26 @@ python verify_curve.py <标准版.jpg> <目标版.jpg> <lut.json>
 `FLEXIBLE_COLOR` 磁盘上没有 NP3 原始文件，NX Studio 1.7.1 的内置列表里也没有，
 「官方最新」这一侧画不出来，就没有对照。
 
-**待办：滑块标定。** 模型里 `SAT_STEP = 1.13`（饱和度每档 ×1.13）是反推值，不是实测值。
-实测彩度反推（NEUTRAL −1 档 ÷ STANDARD、POP +2 档 ÷ STANDARD 开平方）都指向约 1.06，
-比模型小近一半；但三支曲线不同，只能当量级参考。已生成一组「同一曲线、只改一个字节」的
-11 份探针（`d300/tools/probe_slider_pack.py`，输出到 `_probe_slider/`），导出后由
-`d300/tools/probe_slider_read.py --dir <目录>` 直接算出真实每档增益。若增益确与模型不符，
-第十二节「整数档穷举 0 支值得改」的结论需要一并重算。
+**滑块已标定：平均每档 ×1.118**（模型 1.130，差 1.1%）。11 份同曲线探针实测，
+倍率不是常数：0→+1 是 ×1.114、+2→+3 只剩 ×1.059；累计 −3 档 0.648、+3 档 1.275。
+用实测值重跑整数档穷举，结论从「0 支值得改」变成 1 支（SUNDAY，仅改善 0.065 级），
+第十二节的结论站得住。详见 [`d300/docs/14-slider-calibration.md`](d300/docs/14-slider-calibration.md)。
+
+**新线索：底子这一格从来没对齐过。** 官方每支 NP3 都带自己的底子编号（20 个创意滤镜
+是连号 `0x0801–0x0814`），我们生成 NCP 时却一律写 `0x0001`（单色支 `0x064D`）。
+按官方底子分组，26 支的实测残差分得很整齐：
+
+| 分组 | 支数 | 平均差（级） | ΔC\* 标准差 | 官方底子 |
+|---|---|---|---|---|
+| 创意底·彩色 | 16 | **8.21** | 4.41 | 0x0801–0x080C |
+| 创意底·单色 | 4 | 3.55 | 0.08 | 0x0811–0x0814 |
+| 基础底 | 6 | 3.71 | 1.25 | 0001/03C2/00C3/028E/04C7/064D |
+
+同样换了底子，单色组几乎不受影响（彩度偏差贴着零），彩色组向两侧散开——
+曲线搬得动影调，搬不动底子那层「逐色相彩度重排」。
+这是相关性还不是因果，判定靠 8 份「恒等曲线 + 只改底子编号」的探针（`_probe_baseid/`）。
+图 [`d300/charts/baseid-gap.jpg`](d300/charts/baseid-gap.jpg)，
+详见 [`d300/docs/15-picture-control-base.md`](d300/docs/15-picture-control-base.md)。
 
 复现：
 
@@ -432,6 +446,9 @@ python verify_curve.py <标准版.jpg> <目标版.jpg> <lut.json>
 python d300/tools/real_gap.py --csv d300/samples/metrics_real.csv
 python d300/tools/chart_real_gap.py
 python d300/tools/make_real_pairs.py
+python d300/tools/probe_slider_read.py --dir d300/samples/probe_slider
+python d300/tools/probe_baseid_read.py --dir d300/samples/probe_baseid
+python d300/tools/chart_baseid.py
 python d300/tools/report_real.py
 ```
 
