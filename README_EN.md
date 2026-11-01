@@ -535,5 +535,18 @@ Report: [`d300/charts/real-gap.html`](d300/charts/real-gap.html)
   per-filter correlation **0.955**. The model holds up; earlier conclusions stand.
 - 4 filters (`FLAT_MONOCHROME`, `DEEPTONE_MONOCHROME`, `RICH_TONE_PORTRAIT`,
   `FLEXIBLE_COLOR`) have no NP3 on disk and are absent from NX Studio 1.7.1, so no reference exists.
-- Open item: `SAT_STEP = 1.13` per stop is a back-derived value. Real-render chroma suggests
-  ~1.06. An 11-file probe pack (`d300/tools/probe_slider_pack.py`) is ready to measure it exactly.
+- **Slider calibrated: ×1.118 per stop on average** (model assumed 1.130, off by 1.1%).
+  The gain is not constant — 0→+1 is ×1.114 while +2→+3 is only ×1.059; cumulative
+  −3 stops 0.648, +3 stops 1.275. Re-running the integer-slot sweep with the measured value
+  turns "0 filters worth changing" into 1 (SUNDAY, +0.065 level), so section 12 stands.
+  See [`d300/docs/14-slider-calibration.md`](d300/docs/14-slider-calibration.md).
+- **New lead: the base id was never aligned.** Every official NP3 carries its own base id
+  (the 20 creative filters are a contiguous `0x0801–0x0814`), while we always write `0x0001`
+  (`0x064D` for mono). Grouping the 26 by the official base id splits the residual cleanly:
+  creative-base colour **8.21** (16 filters, ΔC\* SD 4.41) vs creative-base mono **3.55**
+  (4, SD 0.08) vs basic-base **3.71** (6, SD 1.25). Both mono groups had their base swapped too,
+  yet only the colour ones scatter — a single tone curve can carry tone but not the per-hue
+  chroma redistribution a creative base performs. This is correlation, not causation yet; the
+  call rests on 8 identity-curve probes that change nothing but the base id (`_probe_baseid/`).
+  Chart [`d300/charts/baseid-gap.jpg`](d300/charts/baseid-gap.jpg), details in
+  [`d300/docs/15-picture-control-base.md`](d300/docs/15-picture-control-base.md).
