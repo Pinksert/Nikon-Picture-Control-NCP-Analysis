@@ -51,9 +51,12 @@ def load(p, size=420):
 
 
 def find(d, tag):
+    """按标签找图。同时接受「B1_STANDARD」与「01_B1_STANDARD」两种命名。"""
+    want = tag.upper()
     for f in os.listdir(d):
         b, _ = os.path.splitext(f)
-        if b.upper().endswith('_' + tag.upper()):
+        b = b.upper()
+        if b == want or b.endswith('_' + want):
             return os.path.join(d, f)
     return None
 
@@ -113,13 +116,13 @@ def main():
     by = {r['tag']: r for r in rows}
     print()
     print('【判定】NCP 是否认创意底子编号')
-    accepted = []
+    accepted, mapped, fallen = [], [], []
     for t in CREATIVE:
         if t not in by:
             continue
         r = by[t]
         if r['mad'] < 0.35:
-            near = min(BASIC, key=lambda b: by[b]['mad'] if b in by else 9e9)
+            fallen.append(t)
             print('  ✗ %-13s 与 STANDARD 几乎相同（平均差 %.2f）→ 回落了' % (t, r['mad']))
         else:
             # 找它最像哪个基础底子：也可能是映射到了别的编号
@@ -127,6 +130,7 @@ def main():
                        key=lambda b: _mad(img[t], img[b], m))
             same = _mad(img[t], img[best], m)
             if same < 0.35:
+                mapped.append((t, best))
                 print('  ~ %-13s 不是原样生效，等价于底子 %s（差 %.2f）'
                       % (t, best, same))
             else:
@@ -134,9 +138,15 @@ def main():
                 print('  ✓ %-13s 独立生效（与 STANDARD 差 %.2f，与最像的基础底子 %s 也差 %.2f）'
                       % (t, r['mad'], best, same))
     print()
+    print('  合计：独立生效 %d 个 / 映射到别的底子 %d 个 / 回落成 STANDARD %d 个'
+          % (len(accepted), len(mapped), len(fallen)))
     if accepted:
-        print('  结论：创意底子编号在 NCP 里有效，共 %d 个独立 —— 「按底子重配」可做。'
-              % len(accepted))
+        print('  结论：创意底子编号在 NCP 里有效（%s）—— 「按底子重配」这条路可做。'
+              % ' / '.join(accepted))
+    elif mapped:
+        print('  结论：创意底子编号在 NCP 里不原样生效，但会被映射到别的底子'
+              '（%s）—— 重配只能在这些落点之间选。'
+              % ' / '.join('%s→%s' % m for m in mapped))
     else:
         print('  结论：创意底子编号在 NCP 里全部回落 —— 只能在 4 个基础底子里选，'
               '升级空间限于 %s 之间。' % ' / '.join(BASIC))
