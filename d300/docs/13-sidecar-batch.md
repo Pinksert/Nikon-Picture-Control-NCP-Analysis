@@ -260,3 +260,45 @@ python d300/tools/real_render_check.py --dir real_v3
 
 回退到 [12-render-new-samples.md](12-render-new-samples.md)：逐个套用、逐个导出，30 次。
 建议仍然**先渲 01 DREAM + 17 CHARCOAL 两张**验证色彩程序设置，别一次渲 30 张白干。
+
+---
+
+## 九、目标侧（最新系统滤镜）也能这样批量
+
+要比「我们的 NCP 和最新优化校准差多少」，两边必须**同一张底片**。
+`samples/workshop/` 那 30 张是 **DSC_3891**（2848×4288 竖构图）渲的，与本次源
+`DSC_4484.NEF`（4288×2848 横构图）不是一张，所以目标侧得重新渲。
+
+内置滤镜的 sidecar 只有 `<ExportData>` 一处（392 字节 NP3 布局），流程更简单：
+
+```bash
+# 1) 把 26 支磁盘 NP3 按槽位改名备好（22–25 这 4 支磁盘上没有，自动跳过）
+#    PICCON01.NP3 … PICCON30.NP3
+
+# 2) 以内置滤镜的模板为骨架（FileName 随便哪张都行，sidecar 不与文件名绑定）
+python d300/tools/sidecar_batch.py make ^
+  --template "lightroom/NKSC_PARAM/DSC_5658.NEF.nksc" ^
+  --nef      "lightroom/DSC_4484.NEF" ^
+  --filters  "_filters_np3" ^
+  --out      "_render_target" --fixup
+```
+
+**为什么 `--fixup` 对长短不一的 NP3 都成立**（2026-11-01 核对）：
+
+| 观察 | 结论 |
+|---|---|
+| 模板里的版本串是 `0310` | 与 `fixup()` 改的那一字节一致 |
+| 模板 392 B = 卡 0x01–0x16（到 244）+ 卡 0x17–0x20（144 B）+ 结束 4 B | `FIX_HEX` 就是卡 0x17–0x20 的完整序列 |
+| 长文件（FLAT 330 / VIVID 326 / LANDSCAPE 314 / NEUTRAL·STANDARD 302 / MONOCHROME 284）多一张 **卡 0x10100 长 74**，内容是中文说明文本 | 卡区前 244 字节仍是标准 22 卡，截断即丢弃注释卡 |
+| NX Studio 亲生的 392 B **不含** 卡 0x10100 | 它也丢弃 → 截断做法与它一致 |
+
+⚠️ 内置滤镜模板**没有** `<CustomData>`，脚本会自动跳过那一处，不会报错。
+⚠️ 第 38 字节的 `0x02` **只对 NCP 布局写**（NP3 那里是名字卡的填充位，改了会坏名字），脚本已按
+`filt_bytes[4:8]` 自动判断。
+
+**26 支而非 30 支**：磁盘上缺 `FLAT_MONOCHROME` / `DEEPTONE_MONOCHROME` /
+`RICH_TONE_PORTRAIT` / `FLEXIBLE_COLOR` 四支的 NP3（它们是 Z8/Zf/Z6III 之后才有的），
+NX Studio 1.7 里也没有，所以这 4 对没法真渲对照。
+
+导出的 26 张按槽号放 `d300/samples/real_target/`，与 `real_v3/` 里同槽号的图逐像素比较
+（同底片、同尺寸 4288×2848，严格对齐）。
