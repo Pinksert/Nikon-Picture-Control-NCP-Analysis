@@ -370,6 +370,7 @@ d300/
 │   ├── pack_baseid_camera.py     底子「机身准入」卡包（8 个，30 秒判读）
 │   ├── pack_color_mech.py        ★ 色彩机制卡包：着色字节 / 单色底加饱和度 / 浓度斜率
 │   ├── probe_color_mech_read.py  ★ 上面那个卡包的判读脚本
+│   ├── pack_probe_sidecars.py    ★ 把探针塞进 NX Studio 调整文件，一次导出（不用逐个选）
 │   └── …
 ├── tests/                        回归测试：把真机踩出来的不变量钉成断言
 │   └── run_tests.py              python tests/run_tests.py（无 pytest 也能跑）
@@ -918,8 +919,11 @@ python tools/probe_color_mech_read.py --dir <成片目录>    # 判读
 ```
 
 8 个文件全是 638 字节 + 恒等曲线（机身执行 `C(H(x)) = x`），影调一个字不改，
-所以画面差异只可能来自那三个字节。用**机身**测而不是 NX Studio：机身才是交付目标，
-而且这一步不需要 NEF、不需要 sidecar，拷卡就能做。
+所以画面差异只可能来自那三个字节。
+
+两条路都行：**给一张现成 NEF**（NX Studio 里导出，不用重拍），或者**拷卡实拍**。
+前者可以用 `tools/pack_probe_sidecars.py` 把「NEF 拷贝 + 调整文件」一次做好，
+NX Studio 里 Ctrl+A 直接导出；后者测的是机身本身的引擎，最权威。
 
 | 对比 | 若成立 | 下一步 |
 |---|---|---|

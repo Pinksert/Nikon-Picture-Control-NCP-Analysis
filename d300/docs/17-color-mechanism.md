@@ -104,6 +104,25 @@ python tools/pack_color_mech.py
 
 ### A 路线步骤（用现成 NEF，不用重拍）
 
+> **更省事的做法**：`tools/pack_probe_sidecars.py` 能一次把「NEF 拷贝 + 调整文件」全做好，
+> NX Studio 里直接 **Ctrl+A → 导出**，不用一个个选滤镜。
+>
+> ```bash
+> python tools/pack_probe_sidecars.py \
+>     --template "<一个当时套着自定义 NCP 存出来的 .nksc>" \
+>     --nef      "<底片.NEF>" \
+>     --out      "D:/.../_probe_color"
+> ```
+>
+> 原理：NX Studio 把当前套用的优化校准**整份嵌在调整文件里，而且嵌两份**
+> （`<Export><ExportData>` 与 `<Custom><CustomData>`）。只换一份 → 静默回落成 STANDARD，
+> 这是早期探针失败的真因。两份都写才生效；`<PictureControl>` 等四个字段写 `1` 表示"自定义"。
+> 模板必须是**套着自定义 NCP** 存出来的（内含 `<CustomData>`），内置滤镜存出来的没有那一节。
+>
+> 生成完先点开 `05_M_CTRL` —— 它必须是**黑白**的。彩色就说明 sidecar 没生效，改走下面的手工路线。
+
+手工路线（sidecar 不生效时的回退）：
+
 底片挑一张**有颜色、曝光正常**的 RAW 就行（`DSC_3891.NEF` 那种车展/人像很合适；
 纯灰墙、大面积天空不行 —— 没颜色就看不出色罩）。
 
