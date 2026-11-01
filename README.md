@@ -377,3 +377,65 @@ python verify_curve.py <标准版.jpg> <目标版.jpg> <lut.json>
   任何单一全局角度只能顾一半。三条出路已逐一排除：换底子（四底子共用一套色彩处理）、
   把曲线当分通道用（`DREAM` 的 LUT 最低输出 46.6，成片通道低到 9.0，不可能是逐通道套用）、
   记录 1 里藏字段（36 字节全部拆开，余下两处 30 个文件完全一致）
+
+## 十二、30 支全量对比（模型口径）
+
+30 支逐支的 v1 实测 → v3 预测对照、分档与结论，单独一页：
+[`d300/charts/v3-gap.html`](d300/charts/v3-gap.html)（30 张三联图在
+[`d300/samples/compare_v3/`](d300/samples/compare_v3/)，明细
+[`d300/samples/metrics_v3_full.csv`](d300/samples/metrics_v3_full.csv)）。
+
+- 平均差 **7.93 → 5.98 级（−24.7%）**，25 支变好、5 支不变、0 支变差
+- 分档：≤3.5 级 11 支 / 3.5–6 六支 / 6–9 七支 / >9 六支
+- 单色 11 支 5.16 级，明显好于彩色 19 支 6.45 级 —— 单色只有一条亮度曲线要对齐
+- 影调已打平（|ΔL\*| 1.36），残差主要在彩度（|ΔC\*| 4.09）
+- 最像：CHARCOAL 1.89 / FLAT_MONOCHROME 1.95 / CARBON 2.66
+- 最不像：DENIM 13.24 / MORNING 11.81 / TOY 11.65
+
+## 十三、真渲染口径：导出之后到底差多少
+
+模型口径是「预测」，这一节是「实测」：同一个 NEF、同一台机器、同一个 NX Studio，
+一次套我们的 NCP 导出、一次套官方 NP3 导出，逐像素相减。样本 `DSC_4484.NEF`，26 支。
+
+报告：[`d300/charts/real-gap.html`](d300/charts/real-gap.html)
+
+| 指标 | 26 支 | 彩色 21 支 | 单色 5 支 |
+|---|---|---|---|
+| 平均差（级） | **6.45** | 7.14 | 3.59 |
+| CIEDE2000 ΔE00 | 5.36 | 6.02 | 2.55 |
+| 超可辨阈值像素 | 63.0% | 72.6% | 22.4% |
+| \|ΔL\*\| | 1.77 | 1.44 | 3.14 |
+| \|ΔC\*\| | 4.51 | 5.54 | 0.17 |
+
+**模型是可信的。** 这 26 支在模型口径下是 6.22 级，实测 6.45，偏差仅 **+0.23**，
+逐支相关系数 **0.955**。所以前面基于模型的结论都不必推翻。
+
+**差距仍然几乎全在「颜色的量」上。** 彩色支 |ΔL\*| 只有 1.44（亮度已对上），
+|ΔC\*| 5.54。而且不是统一偏淡或统一偏浓，是各支各偏一个方向：
+16 支我们偏淡（DENIM −7.7、TOY −7.6、RED −7.5、SEPIA −7.3 最狠），
+5 支偏浓（DRAMA +4.4、SILENCE +4.4、BLEACH +3.6，而它们的饱和度滑块已经在最低档 −3）。
+
+**为什么只有 26 支。** `FLAT_MONOCHROME`、`DEEPTONE_MONOCHROME`、`RICH_TONE_PORTRAIT`、
+`FLEXIBLE_COLOR` 磁盘上没有 NP3 原始文件，NX Studio 1.7.1 的内置列表里也没有，
+「官方最新」这一侧画不出来，就没有对照。
+
+**待办：滑块标定。** 模型里 `SAT_STEP = 1.13`（饱和度每档 ×1.13）是反推值，不是实测值。
+实测彩度反推（NEUTRAL −1 档 ÷ STANDARD、POP +2 档 ÷ STANDARD 开平方）都指向约 1.06，
+比模型小近一半；但三支曲线不同，只能当量级参考。已生成一组「同一曲线、只改一个字节」的
+11 份探针（`d300/tools/probe_slider_pack.py`，输出到 `_probe_slider/`），导出后由
+`d300/tools/probe_slider_read.py --dir <目录>` 直接算出真实每档增益。若增益确与模型不符，
+第十二节「整数档穷举 0 支值得改」的结论需要一并重算。
+
+复现：
+
+```
+python d300/tools/real_gap.py --csv d300/samples/metrics_real.csv
+python d300/tools/chart_real_gap.py
+python d300/tools/make_real_pairs.py
+python d300/tools/report_real.py
+```
+
+> 两侧成片是 4288×2848 全尺寸（各 30 / 26 张，共约 450 MB），不进仓库；
+> 仓库里只有 6 组并排缩略图 `d300/samples/real_pairs/` 与逐支指标
+> [`d300/samples/metrics_real.csv`](d300/samples/metrics_real.csv)。
+> 口径：420px 长边缩放后逐像素统计，剪裁区（任一通道 <8 或 >247）不计入。
