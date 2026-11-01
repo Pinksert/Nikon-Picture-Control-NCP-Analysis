@@ -114,7 +114,9 @@ def embed_data(sidecar_text, filt_bytes, slot02=True):
     """
     e = bytearray(filt_bytes)
     c = bytearray(filt_bytes)
-    if slot02 and len(e) > 38:
+    # 第 38 字节只对 NCP 布局有意义（NP3 那里是名字卡的填充字节，改了就坏）
+    is_ncp = filt_bytes[4:8] == b'\x00\x00\x00\x01'
+    if slot02 and is_ncp and len(e) > 38:
         e[38] = 0x02                       # 复刻 NX Studio 应用态的那个字节
     out, ok1 = _embed_one(sidecar_text, 'ExportData', bytes(e))
     out, ok2 = _embed_one(out, 'CustomData', bytes(c))
@@ -315,7 +317,8 @@ def cmd_make(args):
         got = export_data(txt)
         # ExportData 的第 38 字节会被写成 0x02（应用态），比对时跳过这一位
         ok = (got == used) or (
-            len(got) == len(used) and got[:38] == used[:38] and got[39:] == used[39:])
+            len(got) == len(used) and used[4:8] == b'\x00\x00\x00\x01'
+            and got[:38] == used[:38] and got[39:] == used[39:])
         cb = custom_data(txt)
         ok2 = (cb is None) or (cb == used)
         print('  %02d %-22s %-20s %3d→%-3d 字节  往返%s'
