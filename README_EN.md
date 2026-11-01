@@ -515,3 +515,25 @@ So the D300's "standard / neutral / vivid" are not four colour engines, they are
 default parameters on one engine — and the defaults are overridden by the sliders we write into the
 file. **Changing the base code buys nothing**, which is also why the colour cast cannot be pushed
 down: the cast comes from processing that all four bases share.
+
+## 12. Full 30-way comparison (model caliber)
+
+Per-filter v1 measured vs v3 predicted, bins and conclusions:
+[`d300/charts/v3-gap.html`](d300/charts/v3-gap.html).
+Mean error **7.93 → 5.98** (−24.7%), 25 better / 5 unchanged / 0 worse;
+mono 11 filters 5.16 vs color 19 filters 6.45.
+
+## 13. Real-render caliber: what it actually looks like after export
+
+Same NEF, same machine, same NX Studio: one export with our NCP, one with the official NP3,
+then subtract pixel by pixel. Sample `DSC_4484.NEF`, 26 filters.
+Report: [`d300/charts/real-gap.html`](d300/charts/real-gap.html)
+
+- Mean error **6.45** (color 21: 7.14 / mono 5: 3.59), CIEDE2000 **5.36**, above-JND pixels **63.0%**
+- Tone is matched (**|ΔL\*| 1.44** on color); the gap is chroma (**|ΔC\*| 5.54**)
+- The model predicted 6.22 for the same 26 filters, actual 6.45 → bias only **+0.23**,
+  per-filter correlation **0.955**. The model holds up; earlier conclusions stand.
+- 4 filters (`FLAT_MONOCHROME`, `DEEPTONE_MONOCHROME`, `RICH_TONE_PORTRAIT`,
+  `FLEXIBLE_COLOR`) have no NP3 on disk and are absent from NX Studio 1.7.1, so no reference exists.
+- Open item: `SAT_STEP = 1.13` per stop is a back-derived value. Real-render chroma suggests
+  ~1.06. An 11-file probe pack (`d300/tools/probe_slider_pack.py`) is ready to measure it exactly.
