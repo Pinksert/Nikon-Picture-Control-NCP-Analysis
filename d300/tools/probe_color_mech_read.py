@@ -122,16 +122,44 @@ def main():
     def get(k):
         return stat.get(k)
 
+    # 中性像素子集：控制图里 |a*|、|b*| 都很小的那批。着色一旦生效，这批像素**最先、最明显**变色，
+    # 比全图均值灵敏得多（全图均值被大量彩色像素稀释）。
+    neutral, nbase = None, None
+    if 'C_CTRL' in lab:
+        L0, A0, B0 = lab['C_CTRL']
+        neutral = mask & (np.abs(A0) < 10) & (np.abs(B0) < 10)
+        if neutral.sum() > 2000:
+            nbase = (float(A0[neutral].mean()), float(B0[neutral].mean()))
+            print('中性像素 %d 个（控制图 |a*|,|b*| < 10）—— 着色生效时这批最先变\n' % neutral.sum())
+            print('%-10s %8s %8s %10s' % ('探针', 'a*', 'b*', 'Δ(相对00)'))
+            for n in NAMES:
+                if n in lab:
+                    A, B = lab[n][1], lab[n][2]
+                    a, b = float(A[neutral].mean()), float(B[neutral].mean())
+                    print('%-10s %8.2f %8.2f %10.2f'
+                          % (n, a, b, np.hypot(a - nbase[0], b - nbase[1])))
+            print()
+
     c0, cy, cb = get('C_CTRL'), get('C_TONE_Y'), get('C_TONE_B')
     if c0 and cy and cb:
         dy, db = cy['rb'] - c0['rb'], cb['rb'] - c0['rb']
-        hit = max(abs(dy), abs(db))
-        print('【色罩】彩色底 + 调色字节：R−B 位移  黄 %+.1f / 蓝 %+.1f 级' % (dy, db))
+        print('【色罩】彩色底 + 调色字节：全图 R−B 位移  黄 %+.1f / 蓝 %+.1f 级' % (dy, db))
+        nshift = 0.0
+        if nbase is not None:
+            shifts = []
+            for n in ('C_TONE_Y', 'C_TONE_B'):
+                A, B = lab[n][1], lab[n][2]
+                shifts.append(np.hypot(float(A[neutral].mean()) - nbase[0],
+                                       float(B[neutral].mean()) - nbase[1]))
+            nshift = float(max(shifts))
+            print('        中性像素上的位移：黄 %.2f / 蓝 %.2f（Δab，>2 就很明显）'
+                  % (shifts[0], shifts[1]))
+        hit = max(abs(dy), abs(db), nshift * 2)     # 中性像素位移按 2 倍权重参与判定
         if hit > 3.0:
             print('   ✅ 生效。彩色支可以做色罩了 —— 这是唯一能打破 r=0.80 的机制，值得重做 30 支。')
             ok.append('色罩')
         else:
-            print('   ❌ 不生效（< 3 级）。彩色底子确实只有饱和/色相两个旋钮，色罩这条路正式封死。')
+            print('   ❌ 不生效。彩色底子确实只有饱和/色相两个旋钮，色罩这条路正式封死。')
     cf = get('C_FILT_Y')
     if c0 and cf:
         ratio = cf['C'] / max(c0['C'], 1e-6)
