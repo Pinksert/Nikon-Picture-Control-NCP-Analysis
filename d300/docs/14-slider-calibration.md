@@ -131,6 +131,23 @@ python d300/tools/probe_slider_read.py --dir d300/samples/probe_slider
 
 **着色档改的是「浓度」，不是色调。** 之前以为是换色相，是误解。
 
+### 4.5 顺带发现：30 支里其实有两套调色机制
+
+查 30 支的底子字节时发现的：
+
+| 机制 | 底子 | 调色用哪些字节 | 成员 |
+|---|---|---|---|
+| 彩色底子 | `0x0001` STANDARD | 43 饱和度 / 44 色相 | 20 支（DREAM、DENIM、VIVID…） |
+| 单色底子 + 着色 | `0x064D` MONOCHROME | 46 着色色相 / 47 浓度<br>（43、44 是 `FF`，禁用） | SEPIA、BLUE、RED、PINK，外加 7 支真单色 |
+
+也就是说：**SEPIA / BLUE / RED / PINK 名义上挂着单色底子，实际是靠「着色档」出颜色的。**
+46 字节四支各不相同（SEPIA `0x81`、RED `0x83`、BLUE `0x87`、PINK `0x89`），
+47 都是 `0x82`；7 支真单色则是 46=`0x80`、47=`0xFF`。
+
+这条很关键：这四支的彩度天花板由**着色机制**决定，和彩色支的饱和度滑块不是同一个系统。
+它们恰好也是残差偏大的（SEPIA −7.30、RED −7.54），而滑块的 ±3 档对它们根本不起作用
+（43/44 是禁用的）。所以给它们换彩色底子属于另一个问题，不能和 DENIM / TOY 混在一起比。
+
 ---
 
 ## 五、对既有结论的影响
@@ -211,3 +228,31 @@ python d300/tools/chart_slider.py
 | `d300/samples/probe_slider.csv` | 11 行，全部指标 |
 | `d300/charts/slider-sat.jpg` | 饱和度 7 档标定图 |
 | `d300/charts/slider-misc.jpg` | 色相 / 底子 / 单色着色三联图 |
+
+---
+
+## 八、下一步：底子维度探针（已备好，等导出）
+
+既然底子字节有效，就有必要问一句：**每支滤镜配哪个底子最合适？**
+包已经做好：`_probe_base/` 共 6 份，在 DSC_4484 上跑同底片对照。
+
+```bash
+python d300/tools/pack_base_probe.py --out _probe_base     # 已执行
+# NX Studio 打开 _probe_base → Ctrl+A 导出 → 放进 d300/samples/probe_base/
+python d300/tools/probe_base_read.py --dir d300/samples/probe_base
+```
+
+| 探针 | 改动 | 想验证 |
+|---|---|---|
+| `1_DENIM_VIVID` | STANDARD→VIVID | 偏淡 −7.74，彩度能不能补上来 |
+| `2_TOY_VIVID` | STANDARD→VIVID | 偏淡 −7.58 |
+| `3_DRAMA_NEUTRAL` | STANDARD→NEUTRAL | 偏浓 +4.44，已顶 −3 档，能不能压下去 |
+| `4_SILENCE_NEUTRAL` | STANDARD→NEUTRAL | 偏浓 +4.38 |
+| `X5_RED_VIVID` | MONOCHROME→VIVID | **探索**：着色调换彩色底子会怎样 |
+| `X6_SEPIA_VIVID` | MONOCHROME→VIVID | 同上 |
+
+读数只看一件事：**和官方（`real_target`）的距离有没有变小**。
+换底子本身把画面改了多少（ΔE00）只是过程量，改得多不等于改得对。
+
+前 4 份是干净实验；`X5` / `X6` 是开脑洞——着色调的 43/44 是禁用的，
+换成彩色底子后着色档还管不管用，没人知道，出怪结果也属正常。
