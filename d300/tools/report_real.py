@@ -57,6 +57,53 @@ def avg(rows, key):
     return sum(r[key] for r in rows) / len(rows)
 
 
+def base_groups():
+    """按「官方 NP3 里挂的底子」把 26 支分三组，返回统计与表格行。
+
+    官方每支 NP3 都带自己的底子编号（20 个创意滤镜是连号 0x0801-0x0814），
+    而我们生成 NCP 时一律写 0x0001 STANDARD（单色支写 0x064D）——等于把它替换掉了。
+    分组的意义就是看这个替换和残差有没有关系。
+    """
+    import glob
+    import struct
+    sys.path.insert(0, os.path.join(ROOT, '..', 'np3tool'))
+    import np3core as C
+
+    real = {r['name'].upper(): r for r in csv.DictReader(
+        open(os.path.join(ROOT, 'samples', 'metrics_real.csv'), encoding='utf-8-sig'))}
+    MONO = ('CHARCOAL', 'GRAPHITE', 'BINARY', 'CARBON')
+    G = [('创意底·彩色', '0x0801–0x080C', [], '#C53030'),
+         ('创意底·单色', '0x0811–0x0814', [], '#2F855A'),
+         ('基础底', '0001 / 03C2 / 00C3 / 028E / 04C7 / 064D', [], '#2B6CB0')]
+    for f in sorted(glob.glob(os.path.join(ROOT, '..', '滤镜', '*.NP3'))):
+        d = C.parse_np(open(f, 'rb').read())
+        nm = d['name'].upper()
+        r = real.get(nm)
+        if not r:
+            continue
+        base = d['base']
+        gi = (1 if nm in MONO else 0) if 0x0801 <= base <= 0x0814 else 2
+        G[gi][2].append((nm, float(r['mad']), float(r['dC_signed'])))
+
+    out, stats = [], []
+    for name, codes, items, col in G:
+        m = [x[1] for x in items]
+        c = [x[2] for x in items]
+        mu_m = sum(m) / len(m)
+        mu_c = sum(c) / len(c)
+        sd = (sum((x - mu_c) ** 2 for x in c) / (len(c) - 1)) ** 0.5
+        stats.append(dict(name=name, n=len(items), mad=mu_m, dc=mu_c, sd=sd, col=col))
+        out.append('<tr><td><b style="color:%s">%s</b></td><td class="num">%d</td>'
+                   '<td class="num">%.2f</td><td class="num">%s</td>'
+                   '<td class="num">%.2f</td><td><code>%s</code></td></tr>'
+                   % (col, name, len(items), mu_m,
+                      ('%+.2f' % mu_c).replace('-', '−'), sd, codes))
+    tab = ('<table><thead><tr><th>分组</th><th>支数</th><th>平均差（级）</th>'
+           '<th>ΔC* 均值</th><th>ΔC* 标准差</th><th>官方底子编号</th></tr></thead>'
+           '<tbody>%s</tbody></table>' % ''.join(out))
+    return tab, stats
+
+
 def main():
     rows = read()
     n = len(rows)
@@ -66,6 +113,8 @@ def main():
     Cc = {k: avg(col, k) for k in ('mad', 'de', 'jnd', 'dl', 'dc', 'dh')}
     Mm = {k: avg(mon, k) for k in ('mad', 'de', 'jnd', 'dl', 'dc', 'dh')}
     bias = A['mad'] - A['model']
+    gtab, gst = base_groups()
+    g_col, g_mono, g_base = gst
 
     pairs = '\n'.join(
         '<figure><img src="../samples/real_pairs/pair_%s.jpg" loading="lazy" alt="%s">'
@@ -225,11 +274,38 @@ C* 从 −3 档到 +3 档呈现 8.49 → 11.38 → 9.95 的「先升后降」，
 换成「以 0 档的遮罩为准、七张图共用」之后立刻单调，斜率也稳定在 1.118（三套统计层
 分别给出 1.115 / 1.118 / 1.118，线性拟合 R² 0.91–0.97）。凡是跨图比较，先固定像素集。</div>
 
-<h2>七、六组并排实拍</h2>
+<h2>七、底子：被曲线吞掉的那一层</h2>
+<p>我们生成 NCP 时，底子字节一律写 <code>0x0001</code>（STANDARD），单色支写 <code>0x064D</code>。
+而官方每支 NP3 都带着<b>自己的底子编号</b>：20 个创意滤镜是连号的 <code>0x0801–0x0814</code>
+（DREAM = 0801、DENIM = 080B、BINARY = 0813……）。换句话说，这一格被我们替换掉了。</p>
+
+<p>把这个替换和实测残差摆在一起，分组整齐得不像巧合：</p>
+%(gtab)s
+
+<figure><img src="baseid-gap.jpg" loading="lazy" alt="底子类别与残差">
+<figcaption>左：平均差；右：彩度偏差（带符号）。彩色创意底子那一组不只是更差，是向两侧散开。</figcaption></figure>
+
+<p>要害在右图。单色支同样被换了底子（官方是 0811–0814，我们换成 <code>0x064D</code>），
+彩度偏差却几乎贴着零线，标准差只有 %(gmsd).2f；彩色创意底子组是 %(gcsd).2f，
+从 −7.7 摊到 +4.4。同样是「换掉了官方底子」，一组没事、一组全乱——区别在于
+<b>单色要的是同一色相上的一维着色，一条曲线搬得动；彩色要的是逐色相的彩度重排，
+一条单调曲线搬不动</b>。这也正是第五节「各支各偏一个方向」的成因：偏淡最狠的
+DENIM / TOY / RED / SEPIA 恰好是官方底子里饱和倾向最强的那几支，偏浓的
+DRAMA / SILENCE / BLEACH 正好相反。把它们统统压到同一个中性底子上，
+再想用一张全局倍率补回来，补不回来。</p>
+
+<div class="note"><b>但这是相关性，还不是因果。</b>也可能只是「这几支本来就更极端、更难拟合」。
+要把两者拆开，唯一的办法是把变量降到只剩底子：<b>恒等曲线 + 只改底子编号</b>。
+这样的探针已经备好 8 份（<code>_probe_baseid/</code>），覆盖 4 个基础底子与 4 个创意底子编号。
+它同时回答一个更关键的问题：<b>NCP 认不认 <code>0x08xx</code> 创意底子编号</b>——
+认，就能按底子重配这三十支；不认，就只剩「在 4 个基础底子里挑」这一条路。
+实测结果出来后会补进本页。</div>
+
+<h2>八、六组并排实拍</h2>
 <p>左边官方、右边我们，同一张原片同一套导出设置。差距最大的 6 支：</p>
 %(pairs)s
 
-<h2>八、边界说明</h2>
+<h2>九、边界说明</h2>
 <ul>
 <li>样本是 <b>DSC_4484</b>（横构图 cosplay 实拍），不是拟合时用的 DSC_3891。
 换一张底片还能保持 0.955 的相关性，说明不是过拟合；但数字本身是针对这张片子测的。</li>
@@ -246,16 +322,18 @@ C* 从 −3 档到 +3 档呈现 8.49 → 11.38 → 9.95 的「先升后降」，
 同时作用，两者不是简单相乘，所以 1.118 不能直接拿去乘某支滤镜的实际彩度。</li>
 </ul>
 
-<h2>九、复现</h2>
+<h2>十、复现</h2>
 <pre>python d300/tools/real_gap.py --csv d300/samples/metrics_real.csv
 python d300/tools/chart_real_gap.py
 python d300/tools/make_real_pairs.py
 python d300/tools/probe_slider_read.py --dir d300/samples/probe_slider
 python d300/tools/chart_slider.py
+python d300/tools/probe_baseid_read.py --dir d300/samples/probe_baseid
+python d300/tools/chart_baseid.py
 python d300/tools/report_real.py</pre>
 <p>原始测量数据：<code>d300/samples/metrics_real.csv</code>、<code>d300/samples/probe_slider.csv</code>；
 成片：<code>d300/samples/real_v3/</code>（我们）、<code>d300/samples/real_target/</code>（官方）、
-<code>d300/samples/probe_slider/</code>（11 张标定探针）。
+<code>d300/samples/probe_slider/</code>（11 张标定探针）、<code>d300/samples/probe_baseid/</code>（8 张底子探针）。
 两侧都是 4288×2848 全尺寸导出。</p>
 
 <div class="foot">数据生成于 2026-11-01。本页所有数字由脚本从 csv 现取，不手填。</div>
@@ -264,7 +342,8 @@ python d300/tools/report_real.py</pre>
         mad=A['mad'], de=A['de'], jnd=A['jnd'], dl=A['dl'],
         nc=len(col), nm=len(mon), cmad=Cc['mad'], mmad=Mm['mad'],
         model=A['model'], bias=bias,
-        table=table(rows), pairs=pairs, cdl=Cc['dl'], cdc=Cc['dc'])
+        table=table(rows), pairs=pairs, cdl=Cc['dl'], cdc=Cc['dc'],
+        gtab=gtab, gmsd=g_mono['sd'], gcsd=g_col['sd'])
 
     out = os.path.join(ROOT, 'charts', 'real-gap.html')
     with open(out, 'w', encoding='utf-8', newline='\n') as f:
