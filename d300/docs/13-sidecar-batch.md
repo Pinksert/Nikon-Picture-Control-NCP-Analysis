@@ -136,6 +136,12 @@ NX Studio 显示 DREAM）解析结果：
 size 字段写成 base64 文本长度。生成的 30 个 sidecar 已校验：
 **除两段 base64 外，XML 与模板逐字相同**。
 
+**sidecar 到底放哪里**（2026-11-01 确认）：NX Studio 自己写在
+`<照片目录>\NKSC_PARAM\<照片全名>.nksc` —— 证据是 `lightroom\DSC_4484.NEF` 的附属文件
+落在 `lightroom\NKSC_PARAM\` 里，而不是和 NEF 并排。放同目录它也能读，
+但跟它自己的写法不一致，容易让人以为没生效。脚本现在默认写进 `NKSC_PARAM\`，
+要平铺到同级加 `--flat`。
+
 ---
 
 ### 情形 A（T2 也显示 DREAM）—— 直接用磁盘 NCP
@@ -219,7 +225,8 @@ python d300/tools/sidecar_batch.py make ^
 
 ## 六、第三步：导出
 
-1. 打开 `_render_v3` 文件夹（30 份 NEF + 30 个同名 sidecar，命名规则 `原文件全名 + .nksc`）
+1. 打开 `_render_v3` 文件夹：30 份 NEF 在根下，30 个 sidecar 在 `_render_v3\NKSC_PARAM\`
+   （命名规则 `原文件全名 + .nksc`，与 NX Studio 自己的位置一致 —— 别手动移出来）
 2. 缩略图若没变化：找「重新读取调整信息」一类命令，或重启 NX Studio
 3. `Ctrl+A` 全选 → `文件` → `导出(&E)...`
 4. 设置：**sRGB、长边 600px、质量 ≥90**，文件名选**与源文件同名**
@@ -243,6 +250,7 @@ python d300/tools/real_render_check.py --dir real_v3
 | 源 NEF | 本机 4 张 D300 NEF（DSC_4484/5658/8100/9308）经结构相关性比对**都不是**原样片 DSC_3891（相关 0.06–0.20）。方案 A 需要你提供 DSC_3891.NEF |
 | 磁盘占用 | 30 份 × 约 12 MB ≈ 360 MB |
 | 色彩程序 | 仍然必须设「**与照相机兼容**」，两处都要（首选项 + 编辑面板），这一点与 sidecar 无关 |
+| sidecar 位置 | **已确认**：`<照片目录>\NKSC_PARAM\<照片全名>.nksc`（NX Studio 自己的习惯位置）；同级也认，脚本默认写 NKSC_PARAM |
 | 编号 vs 内嵌，谁优先 | **待实机确认**：`<PictureControl>=1` 沿用模板，若 NX Studio 以编号为准，30 张会全显示同一个。打开 `_render_v3` 看缩略图名字即可判定 |
 | 底片 | 现有对照 `samples/workshop/` 是 **DSC_3891**（2848×4288 竖构图）渲的，与本次源 `DSC_4484.NEF`（4288×2848 横构图）**不是同一张**，两边都要用 4484 重渲才能比 |
 
