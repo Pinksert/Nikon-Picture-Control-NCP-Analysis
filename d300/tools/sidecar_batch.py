@@ -277,6 +277,11 @@ def cmd_make(args):
         if not os.path.exists(p):
             raise SystemExit('找不到：%s' % p)
     os.makedirs(out, exist_ok=True)
+    # NX Studio 把 sidecar 写在照片旁边名为 NKSC_PARAM 的子文件夹里
+    # （证据：lightroom/DSC_4484.NEF 的 sidecar 落在 lightroom/NKSC_PARAM/）。
+    # 放根目录它也认，但跟它自己的写法不一致，容易让人以为没生效。
+    scd = out if args.flat else os.path.join(out, 'NKSC_PARAM')
+    os.makedirs(scd, exist_ok=True)
 
     raw_txt, tpl_txt = read_sidecar(tpl_path)
     pid = get_field(tpl_txt, 'PictureControl')
@@ -306,7 +311,7 @@ def cmd_make(args):
         txt = embed_data(raw_txt, used, slot02=not args.no_slot_byte)
         if not args.dry_run:
             copy_nef(nef, os.path.join(out, stem + '.NEF'))
-            write_sidecar(os.path.join(out, stem + '.NEF.nksc'), txt)
+            write_sidecar(os.path.join(scd, stem + '.NEF.nksc'), txt)
         got = export_data(txt)
         # ExportData 的第 38 字节会被写成 0x02（应用态），比对时跳过这一位
         ok = (got == used) or (
@@ -324,10 +329,11 @@ def cmd_make(args):
 
 在 NX Studio 里：
   1. 确认首选项勾了「保存到附属文件」
-  2. 打开这个文件夹
-  3. 如果缩略图没变，选「编辑 → 重新读取调整信息」（具体措辞以界面为准）
-  4. Ctrl+A 全选 → 文件 → 导出(&E)... → sRGB、长边 600px、质量≥90
-  5. 文件名选「与源文件同名」，导出的就是 01_DREAM.jpg … 30_VIVID.jpg
+  2. sidecar 在 NKSC_PARAM 子文件夹里（NX Studio 自己的习惯位置），别手动移出来
+  3. 打开这个文件夹
+  4. 如果缩略图没变，选「编辑 → 重新读取调整信息」（具体措辞以界面为准）
+  5. Ctrl+A 全选 → 文件 → 导出(&E)... → sRGB、长边 600px、质量≥90
+  6. 文件名选「与源文件同名」，导出的就是 01_DREAM.jpg … 30_VIVID.jpg
 """ % (out, len(files), len(files)))
 
 
@@ -403,6 +409,8 @@ def main():
                    help='对磁盘文件先做补齐（NP3 布局需要；NCP 会自动跳过）')
     m.add_argument('--no-slot-byte', action='store_true',
                    help='ExportData 第 38 字节不写 0x02（默认写，与 NX Studio 应用态一致）')
+    m.add_argument('--flat', action='store_true',
+                   help='sidecar 与 NEF 同级（默认写进 NKSC_PARAM 子文件夹，与 NX Studio 一致）')
 
     args = ap.parse_args()
     if args.cmd == 'probe':
