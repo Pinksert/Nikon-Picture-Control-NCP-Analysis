@@ -456,6 +456,31 @@ enough. Methodology: `d300/docs/08-tone-color-v2.md`.
   "monochrome base + heavy toning", while the originals are "low saturation, colour partly retained,
   light toning". That route needs rebuilding.
 
+### What the residual actually is: one law
+
+Characterise each filter against the **original STANDARD** render on the same frame (how much it
+brightens, how much chroma it adds, which way it shifts the cast), then plot that against the v3
+residual:
+
+```
+residual ≈ 3.65 + 0.217 × |cast|        r = 0.80 (all 30), 0.85 (colour-base 26)   R² = 0.63
+```
+
+* **3.65 levels is the floor** — every filter with a neutral cast lands within 2.98–3.63.
+* **10 levels of cast ≈ 2.2 levels of residual** — `DENIM` cast −38 → 13.2, `MORNING` −29 → 11.8.
+* Residual is now **uncorrelated** with how saturated or how bright a filter is (r = 0.03 / −0.03):
+  the v2 slider calibration extracted everything that dimension had to give.
+
+The four toned filters (13–16) are the exception in the good direction: they sit on a monochrome base
+and produce the cast *natively* through the toning hue, so a −35 cast costs `BLUE` only 6.2 levels.
+The price is that they lose "colour partially retained".
+
+**A colour base cannot make a cast; a monochrome base cannot keep colour.** D300 offers only those two
+roads (all four bases share one colour engine), which is why v3 stops at 5.98 rather than 2.
+
+Details, chart and the full 30-row character table:
+[`d300/docs/16-filter-character.md`](d300/docs/16-filter-character.md).
+
 Bottom line: monochrome filters are usable as-is; colour Creative Picture Controls are
 *same-mood approximations*, not reproductions.
 
