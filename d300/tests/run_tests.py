@@ -230,6 +230,43 @@ def test_sample_sets():
 
 
 @case
+def test_probe_packs():
+    """两个卡包：各 8 个文件、638 字节、曲线开关 01 01；色彩机制包的字节组合要对得上"""
+    bad = []
+    packs = {
+        '底子探针': {'bases': [0x0001, 0x03C2, 0x00C3, 0x064D, 0x0801, 0x0808, 0x080B, 0x0813]},
+        '色彩机制': {'bases': [0x0001] * 4 + [0x064D] * 4},
+    }
+    for name, cfg in packs.items():
+        d = os.path.join(ROOT, 'ncp', 'packs', name, 'NIKON', 'CUSTOMPC')
+        fs = sorted(glob.glob(os.path.join(d, '*.NCP')))
+        if len(fs) != 8:
+            bad.append('%s: %d 个文件，应为 8' % (name, len(fs)))
+            continue
+        for i, fn in enumerate(fs):
+            raw, recs = parse_ncp(fn)
+            tag = '%s/%s' % (name, os.path.basename(fn))
+            if len(raw) != 638:
+                bad.append('%s: 长度 %d' % (tag, len(raw)))
+                continue
+            sl = list(recs[1][28:36])
+            base = struct.unpack_from('>H', recs[1], 24)[0]
+            if base != cfg['bases'][i]:
+                bad.append('%s: 底子 0x%04X，应为 0x%04X' % (tag, base, cfg['bases'][i]))
+            if sl[1:3] != [0x01, 0x01]:
+                bad.append('%s: 41/42 = %02X %02X，曲线会被丢弃' % (tag, sl[1], sl[2]))
+    # 色彩机制包：01 必须是"45–47 全 FF"的基准，02 必须真的写上了调色字节
+    d = os.path.join(ROOT, 'ncp', 'packs', '色彩机制', 'NIKON', 'CUSTOMPC')
+    _, r1 = parse_ncp(os.path.join(d, 'PICCON01.NCP'))
+    _, r2 = parse_ncp(os.path.join(d, 'PICCON02.NCP'))
+    if list(r1[1][28:36])[5:] != [0xFF, 0xFF, 0xFF]:
+        bad.append('色彩机制/01 应是 45–47 全 FF 的彩色基准')
+    if list(r2[1][28:36])[5:] == [0xFF, 0xFF, 0xFF]:
+        bad.append('色彩机制/02 没写调色字节，等于和 01 重复')
+    return bad
+
+
+@case
 def test_presets_parse():
     """把 presets/ 里每个 NP2/NP3 都解析一遍，名字/底子/参数不能崩"""
     import ncp_d300 as N

@@ -481,6 +481,22 @@ roads (all four bases share one colour engine), which is why v3 stops at 5.98 ra
 Details, chart and the full 30-row character table:
 [`d300/docs/16-filter-character.md`](d300/docs/16-filter-character.md).
 
+### The next lever: three bytes nobody has tested
+
+All three colour knobs on a colour base (saturation, hue, curve) leave the neutral axis untouched,
+so a global cast is out of reach. But the last three slider bytes — `45` (mono filter),
+`46` (toning hue, 10 steps), `47` (toning density) — have always been written `FF FF FF` out of
+convention, never tested. If the body honours them on a colour base, that *is* a cast mechanism.
+
+`d300/ncp/packs/色彩机制/` holds 8 probes (identity curve, differing only in those bytes) plus
+`tools/probe_color_mech_read.py` for the verdict — 8 shots on the camera settle it. See
+[`d300/docs/17-color-mechanism.md`](d300/docs/17-color-mechanism.md).
+
+Also recorded: the four toned filters are now **too pale** (`SEPIA` ΔC\* −7.30, `RED` −7.54 on real
+renders), because v2 backed the toning density off too far — but the measured per-step strength has
+a 3× discrepancy (25%/step in the model vs ~8%/step in the one probe), so the probe pack includes a
+density pair to measure it properly instead of guessing.
+
 Bottom line: monochrome filters are usable as-is; colour Creative Picture Controls are
 *same-mood approximations*, not reproductions.
 
