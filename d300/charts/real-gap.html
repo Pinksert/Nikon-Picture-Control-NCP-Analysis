@@ -179,7 +179,34 @@ C* 从 −3 档到 +3 档呈现 8.49 → 11.38 → 9.95 的「先升后降」，
 换成「以 0 档的遮罩为准、七张图共用」之后立刻单调，斜率也稳定在 1.118（三套统计层
 分别给出 1.115 / 1.118 / 1.118，线性拟合 R² 0.91–0.97）。凡是跨图比较，先固定像素集。</div>
 
-<h2>七、六组并排实拍</h2>
+<h2>七、底子：被曲线吞掉的那一层</h2>
+<p>我们生成 NCP 时，底子字节一律写 <code>0x0001</code>（STANDARD），单色支写 <code>0x064D</code>。
+而官方每支 NP3 都带着<b>自己的底子编号</b>：20 个创意滤镜是连号的 <code>0x0801–0x0814</code>
+（DREAM = 0801、DENIM = 080B、BINARY = 0813……）。换句话说，这一格被我们替换掉了。</p>
+
+<p>把这个替换和实测残差摆在一起，分组整齐得不像巧合：</p>
+<table><thead><tr><th>分组</th><th>支数</th><th>平均差（级）</th><th>ΔC* 均值</th><th>ΔC* 标准差</th><th>官方底子编号</th></tr></thead><tbody><tr><td><b style="color:#C53030">创意底·彩色</b></td><td class="num">16</td><td class="num">8.21</td><td class="num">−2.64</td><td class="num">4.41</td><td><code>0x0801–0x080C</code></td></tr><tr><td><b style="color:#2F855A">创意底·单色</b></td><td class="num">4</td><td class="num">3.55</td><td class="num">−0.22</td><td class="num">0.08</td><td><code>0x0811–0x0814</code></td></tr><tr><td><b style="color:#2B6CB0">基础底</b></td><td class="num">6</td><td class="num">3.71</td><td class="num">−1.52</td><td class="num">1.25</td><td><code>0001 / 03C2 / 00C3 / 028E / 04C7 / 064D</code></td></tr></tbody></table>
+
+<figure><img src="baseid-gap.jpg" loading="lazy" alt="底子类别与残差">
+<figcaption>左：平均差；右：彩度偏差（带符号）。彩色创意底子那一组不只是更差，是向两侧散开。</figcaption></figure>
+
+<p>要害在右图。单色支同样被换了底子（官方是 0811–0814，我们换成 <code>0x064D</code>），
+彩度偏差却几乎贴着零线，标准差只有 0.08；彩色创意底子组是 4.41，
+从 −7.7 摊到 +4.4。同样是「换掉了官方底子」，一组没事、一组全乱——区别在于
+<b>单色要的是同一色相上的一维着色，一条曲线搬得动；彩色要的是逐色相的彩度重排，
+一条单调曲线搬不动</b>。这也正是第五节「各支各偏一个方向」的成因：偏淡最狠的
+DENIM / TOY / RED / SEPIA 恰好是官方底子里饱和倾向最强的那几支，偏浓的
+DRAMA / SILENCE / BLEACH 正好相反。把它们统统压到同一个中性底子上，
+再想用一张全局倍率补回来，补不回来。</p>
+
+<div class="note"><b>但这是相关性，还不是因果。</b>也可能只是「这几支本来就更极端、更难拟合」。
+要把两者拆开，唯一的办法是把变量降到只剩底子：<b>恒等曲线 + 只改底子编号</b>。
+这样的探针已经备好 8 份（<code>_probe_baseid/</code>），覆盖 4 个基础底子与 4 个创意底子编号。
+它同时回答一个更关键的问题：<b>NCP 认不认 <code>0x08xx</code> 创意底子编号</b>——
+认，就能按底子重配这三十支；不认，就只剩「在 4 个基础底子里挑」这一条路。
+实测结果出来后会补进本页。</div>
+
+<h2>八、六组并排实拍</h2>
 <p>左边官方、右边我们，同一张原片同一套导出设置。差距最大的 6 支：</p>
 <figure><img src="../samples/real_pairs/pair_01_DREAM.jpg" loading="lazy" alt="DREAM"></figure>
 <figure><img src="../samples/real_pairs/pair_02_MORNING.jpg" loading="lazy" alt="MORNING"></figure>
@@ -188,7 +215,7 @@ C* 从 −3 档到 +3 档呈现 8.49 → 11.38 → 9.95 的「先升后降」，
 <figure><img src="../samples/real_pairs/pair_12_TOY.jpg" loading="lazy" alt="TOY"></figure>
 <figure><img src="../samples/real_pairs/pair_15_RED.jpg" loading="lazy" alt="RED"></figure>
 
-<h2>八、边界说明</h2>
+<h2>九、边界说明</h2>
 <ul>
 <li>样本是 <b>DSC_4484</b>（横构图 cosplay 实拍），不是拟合时用的 DSC_3891。
 换一张底片还能保持 0.955 的相关性，说明不是过拟合；但数字本身是针对这张片子测的。</li>
@@ -205,16 +232,18 @@ C* 从 −3 档到 +3 档呈现 8.49 → 11.38 → 9.95 的「先升后降」，
 同时作用，两者不是简单相乘，所以 1.118 不能直接拿去乘某支滤镜的实际彩度。</li>
 </ul>
 
-<h2>九、复现</h2>
+<h2>十、复现</h2>
 <pre>python d300/tools/real_gap.py --csv d300/samples/metrics_real.csv
 python d300/tools/chart_real_gap.py
 python d300/tools/make_real_pairs.py
 python d300/tools/probe_slider_read.py --dir d300/samples/probe_slider
 python d300/tools/chart_slider.py
+python d300/tools/probe_baseid_read.py --dir d300/samples/probe_baseid
+python d300/tools/chart_baseid.py
 python d300/tools/report_real.py</pre>
 <p>原始测量数据：<code>d300/samples/metrics_real.csv</code>、<code>d300/samples/probe_slider.csv</code>；
 成片：<code>d300/samples/real_v3/</code>（我们）、<code>d300/samples/real_target/</code>（官方）、
-<code>d300/samples/probe_slider/</code>（11 张标定探针）。
+<code>d300/samples/probe_slider/</code>（11 张标定探针）、<code>d300/samples/probe_baseid/</code>（8 张底子探针）。
 两侧都是 4288×2848 全尺寸导出。</p>
 
 <div class="foot">数据生成于 2026-11-01。本页所有数字由脚本从 csv 现取，不手填。</div>
