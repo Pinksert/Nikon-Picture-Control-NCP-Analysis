@@ -66,9 +66,11 @@ def fig_sat(rows):
         ax.annotate('%.2f' % v, (k, v), textcoords='offset points',
                     xytext=(0, -15), ha='center', fontsize=9, color=C_BLUE)
 
-    ax.annotate('−3 档到 0 档：每档 ×0.895\n'
-                '0 档到 +3 档：每档 ×1.118\n'
-                '两者互为倒数（0.895 × 1.118 = 1.000）',
+    seg = lambda i: allp[i + 1] / allp[i]
+    ax.annotate('对数拟合：平均每档 ×%.3f（R² 0.97）\n'
+                '但倍率不是常数，越往外越没劲：\n'
+                '0→+1 ×%.3f，+1→+2 ×%.3f，+2→+3 ×%.3f'
+                % (step, seg(3), seg(4), seg(5)),
                 xy=(-2.92, 1.33), fontsize=10.5, color='#2D3748', va='top',
                 bbox=dict(boxstyle='round,pad=0.5', fc='#F7FAFC', ec='#CBD5E0'))
 
