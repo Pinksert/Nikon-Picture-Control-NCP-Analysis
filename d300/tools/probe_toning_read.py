@@ -47,6 +47,28 @@ def load(path, size=None):
     return np.asarray(im, dtype=np.float32)
 
 
+def load_oriented(path, ref):
+    """把导出图按官方样片的朝向摆正。
+
+    为什么需要：sidecar 模板来自另一张照片，它的 <transform> 是 Rotation 0，
+    套到竖构图上导出来会是横的（内容转 90°）。旋转只是重排像素，彩度均值其实不变，
+    但"两张图共用一批像素"这件事就不成立了 —— 所以先摆正再算，别偷这个懒。
+    """
+    im = Image.open(path).convert('RGB')
+    ref_size = (ref.shape[1], ref.shape[0])
+    if im.size == ref_size:
+        return np.asarray(im, dtype=np.float32)
+    small = Image.fromarray(ref.astype(np.uint8)).resize((96, max(1, int(96 * ref.shape[0] / ref.shape[1]))))
+    tgt = np.asarray(small, dtype=np.float32)
+    best = (1e18, im)
+    for ang in (0, 90, 180, 270):
+        c = im if ang == 0 else im.rotate(ang, expand=True)
+        d = np.abs(np.asarray(c.resize(small.size), dtype=np.float32) - tgt).mean()
+        if d < best[0]:
+            best = (d, c)
+    return np.asarray(best[1].resize(ref_size, Image.LANCZOS), dtype=np.float32)
+
+
 def stats(rgb, mask):
     L, A, B = lab(rgb)
     C = np.hypot(A, B)
@@ -80,7 +102,7 @@ def main():
             print('缺官方样片 %s' % off_path)
             return 1
         off = load(off_path)
-        ours = load(f, size=(off.shape[1], off.shape[0]))
+        ours = load_oriented(f, off)
         mask = ((off.min(2) > 8) & (off.max(2) < 247) &
                 (ours.min(2) > 8) & (ours.max(2) < 247))
         Lo, Co, ao, bo = stats(ours, mask)
