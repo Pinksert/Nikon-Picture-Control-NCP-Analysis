@@ -62,7 +62,9 @@ def main():
     side_dir = os.path.join(out, 'NKSC_PARAM')
     os.makedirs(side_dir, exist_ok=True)
 
-    raw, txt = S.read_sidecar(TPL)
+    # ⚠️ 必须用 template_text()（原始转义形态）。用 read_sidecar()[1] 的
+    #    反转义文本会写出裸 XML，NX Studio 直接忽略整份 sidecar。
+    txt = S.template_text(TPL)
     print('模板 %s' % os.path.basename(TPL))
     print('%-22s %-10s %-9s %s' % ('输出名', '原底子', '新底子', '备注'))
     print('-' * 74)
@@ -88,6 +90,9 @@ def main():
 
         # 往返校验：CustomData 必须与我们写进去的字节完全一致
         raw2, txt2 = S.read_sidecar(os.path.join(side_dir, stem + '.NEF.nksc'))
+        # 形态校验：NineEdits 必须仍是转义过的（裸 XML 会被 NX Studio 忽略）
+        assert '&lt;userData&gt;' in raw2 and '<userData>' not in raw2, \
+            '%s 的 NineEdits 是裸 XML' % stem
         c = S.custom_data(txt2)
         ok = (c == nb)
         print('%-22s 0x%04X     0x%04X     %s%s'

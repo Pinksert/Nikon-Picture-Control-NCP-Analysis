@@ -1,0 +1,14 @@
+# 二进制与不需要做换行转换的格式
+*.jpg   -text
+*.jpeg  -text
+*.png   -text
+*.gif   -text
+*.cube  -text
+*.NCP   -text
+*.ncp   -text
+*.NP3   -text
+*.np3   -text
+*.NP2   -text
+*.nksc  -text
+*.nef   -text
+*.NEF   -text

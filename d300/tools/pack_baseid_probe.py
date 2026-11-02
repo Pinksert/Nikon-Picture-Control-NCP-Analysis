@@ -69,12 +69,46 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=os.path.join(ROOT, '..', '_probe_baseid'))
     ap.add_argument('--nef', default=NEF)
+    ap.add_argument('--ncp-only', action='store_true',
+                    help='只生成可导入的 NCP + 同名底片（sidecar 那条路 2026-11-02 已证伪）')
+    ap.add_argument('--allow-creative', action='store_true',
+                    help='允许写 0x08xx（默认跳过）：这些编号会让 NX Studio 闪退，见 docs/19')
     a = ap.parse_args()
     out = os.path.abspath(a.out)
+
+    if a.ncp_only:
+        # 名字卡 20 字节，只能缩写；底片仍用全名，导出后读数工具直接认
+        short = {'STANDARD': 'B1 STD', 'NEUTRAL': 'B2 NEU', 'VIVID': 'B3 VIV',
+                 'MONOCHROME': 'B4 MONO', 'DREAM': 'B5 DRE', 'BLEACH': 'B6 BLE',
+                 'DENIM': 'B7 DEN', 'BINARY': 'B8 BIN'}
+        nd = os.path.join(out, 'ncp')
+        md = os.path.join(out, 'manual')
+        os.makedirs(nd, exist_ok=True)
+        os.makedirs(md, exist_ok=True)
+        print('%-14s %-10s %-6s %s' % ('输出', 'NCP 名', '编号', '说明'))
+        print('-' * 70)
+        for i, (code, nm, kind, why) in enumerate(PLAN, 1):
+            stem = 'B%d_%s' % (i, nm)
+            if code >= 0x0800 and not a.allow_creative:
+                print('%-14s %-10s 0x%04X   跳过：08xx 会让 NX Studio 闪退（docs/19）'
+                      % (stem, short[nm], code))
+                continue
+            ncp, _ = make_identity_ncp(short[nm], code, kind == 'mono')
+            open(os.path.join(nd, stem + '.NCP'), 'wb').write(ncp)
+            dst = os.path.join(md, stem + '.NEF')
+            if not os.path.exists(dst):
+                shutil.copy2(a.nef, dst)
+            print('%-14s %-10s 0x%04X   %s' % (stem, short[nm], code, why))
+        print('\nNCP  → %s' % nd)
+        print('底片 → %s' % md)
+        return
+
     side = os.path.join(out, 'NKSC_PARAM')
     os.makedirs(side, exist_ok=True)
 
-    raw, txt = S.read_sidecar(TPL)
+    # ⚠️ 必须用 template_text()（原始转义形态）。用 read_sidecar()[1] 的
+    #    反转义文本会写出裸 XML，NX Studio 直接忽略整份 sidecar（2026-11-01 踩过）。
+    txt = S.template_text(TPL)
     for f in os.listdir(side):
         os.remove(os.path.join(side, f))
 
@@ -93,7 +127,10 @@ def main():
         # 往返核对：sidecar 里的 CustomData 必须逐字节等于我们生成的 NCP
         import base64
         import re
-        _, t2 = S.read_sidecar(os.path.join(side, stem + '.NEF.nksc'))
+        raw2, t2 = S.read_sidecar(os.path.join(side, stem + '.NEF.nksc'))
+        # 形态核对：NineEdits 必须仍是转义过的，否则 NX Studio 会整份忽略
+        assert '&lt;userData&gt;' in raw2 and '<userData>' not in raw2, \
+            '%s 的 NineEdits 是裸 XML' % stem
         c = base64.b64decode(re.search(r'<CustomData>(.*?)</CustomData>', t2, re.S).group(1).strip())
         assert c == ncp, '%s 往返不一致' % stem
         print('%-6s %-14s 0x%04X     %-6s %s' % (stem, nm, code, kind, why))

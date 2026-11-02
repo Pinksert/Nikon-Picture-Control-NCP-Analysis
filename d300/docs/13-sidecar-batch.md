@@ -1,9 +1,34 @@
 # 用 sidecar 一次导出 30 张（免手点 30 次）
 
-> 状态（2026-10-31 17:30 更新）：**模板已拿到并解析完毕，30 份批次 A 已生成**。
-> V4 失败的真因找到了：**套用自定义滤镜时 sidecar 要写两处数据，只改一处会回落 STANDARD**。
-> 详见下面「五·0」。
-> 回退方案永远是 [12-render-new-samples.md](12-render-new-samples.md) 里的人工逐个套用。
+> 状态（2026-11-02 11:05 更新）：**这条路是通的；上午那次失败不是文件内容的问题。**
+>
+> 先纠正上午的误判。把上午失败的 8 份 sidecar 与 NX Studio 手工套用后自写的
+> `manual/NKSC_PARAM/P1…P8`（17164 B，我们 17122 B）抹掉 base64 做差异，只剩两处不同：
+> `rdf:about`（空 vs `core-sidear-tags/1.0`）和 `ExposureSettings` 下 6 个 `Apply*`（false vs true）。
+> 于是造了 5 格对照（`tools/sidecar_flag_test.py` → `_probe_flag/`，四格同塞 TOY +6）：
+>
+> | 格 | 改动 | 实测彩度 |
+> |---|---|---|
+> | Q1 | 原样（= 上午那批的生成逻辑） | 17.52 |
+> | Q2 | 只改 rdf:about | 17.52 |
+> | Q3 | 只改 Apply\* | 17.52 |
+> | Q4 | 两处都改 | 17.52 |
+> | Q5 | 照抄 NX 自己写的那份 | 17.52 |
+>
+> 五张与手工套用得到的 P4（TOY +6）ΔE00 只有 0.27–0.32，参考的 SILENCE 是 7.91。
+> **问哪一处都不是**：只要 sidecar 被读进去，字段怎么摆都能生效。
+>
+> 那上午为什么全显示 SILENCE？定位到**扫描时序**：`_probe_range/` 的目录注册时间是
+> `09:47:26`，而 8 份 sidecar 是 `09:47:25.7–26.1` 逐个落盘的 —— NX Studio 边写边扫，
+> 扫到某张 NEF 时它的 sidecar 还没出现，就把「无调整」缓存了下来；NEF 又是 `copy2`
+> 复制的、mtime 保留成 5 月，之后没有变化可以触发重读。`_probe_flag/` 是 10:45 一次写完、
+> 10:47 才打开的，所以一次就对。
+>
+> **规则**：整包写完再在 NX Studio 里打开目录；不要一边生成一边让它扫。
+> 文件名长度这条另有 4 格对照在跑（`python tools/sidecar_flag_test.py --mode names` →
+> `_probe_name/`，四份 sidecar 内容逐字节相同、只改名字，路径 66–142 字符）。
+> 正式路线仍是 [12-render-new-samples.md](12-render-new-samples.md) 的人工逐个套用，
+> 但批量包以后可以直接用，不必再手点。
 
 ---
 
@@ -223,6 +248,44 @@ python d300/tools/sidecar_batch.py make ^
 
 ---
 
+## 五·5 交付前体检（必做，一次 2 秒）
+
+```bash
+python d300/tools/sidecar_check.py _probe_base _probe_baseid
+```
+
+它查的是「XML 语法合法、但 NX Studio 一定不认」这一类坏件——**这种坏件靠任何按标签取值的
+往返校验都查不出来**，只有真打开 NX Studio 才会露馅，代价是白等一轮导出。
+
+体检四项：整份文件能解析 → `NineEdits` 必须是**纯文本**且里面含 `<userData>` → 两处内嵌
+滤镜 base64 能解开且魔数为 `NCP\0` → 同名 NEF 就在上一层。
+
+### 2026-11-01 踩的坑：转义形态
+
+底子探针两批 14 份，在 NX Studio 里**全部**退回「拍摄时设定 (SD 标准)」，一张都没套上。
+原因不在滤镜字节，在写文件的形态：
+
+| | 正确（能读） | 错误（被整份忽略） |
+|---|---|---|
+| `NineEdits` 里的内层 XML | `&lt;userData&gt;` 转义 | `<userData>` 裸标签 |
+| 文件大小 | 17122 B | 13662 B |
+| XML 解析器 | 内层是**文本** | 内层被解析成**子元素** |
+
+`read_sidecar()` 返回 `(原始文本, 已反转义文本)`：前者能回写，后者是给人/正则读值用的。
+把那两个探针脚本写成 `_, txt = read_sidecar(TPL)` 再交给 `embed_data()`，等于把整个
+NineEdits 的解码结果写了回去。裸标签本身仍是合法 XML，所以 `custom_data()` 的往返校验
+照样 OK —— 校验通过、NX Studio 拒收，这是最阴的一种失败。
+
+现已加两道闸：
+
+* `embed_data()` 见到裸 XML 直接抛 `ValueError`，不再静默写成坏件
+* `template_text()` 读模板，非转义形态直接 `SystemExit`
+* 两个打包脚本在写完后再断言一次 `&lt;userData&gt;` 在、`<userData>` 不在
+
+判据补充：正确 sidecar 与模板**同长**（同源 NCP 时 17122 B）。差 3 KB 上下就该怀疑转义。
+
+---
+
 ## 六、第三步：导出
 
 1. 打开 `_render_v3` 文件夹：30 份 NEF 在根下，30 个 sidecar 在 `_render_v3\NKSC_PARAM\`
@@ -231,6 +294,10 @@ python d300/tools/sidecar_batch.py make ^
 3. `Ctrl+A` 全选 → `文件` → `导出(&E)...`
 4. 设置：**sRGB、长边 600px、质量 ≥90**，文件名选**与源文件同名**
 5. 得到 `01_DREAM.jpg` … `30_VIVID.jpg`，正好是 [real_render_check.py](../tools/real_render_check.py) 期望的命名
+
+> ⚠️ sidecar 换过之后，**先关掉 NX Studio 再重开**。它已经在编辑面板里加载的图，
+> 面板不会自己刷新成新 sidecar 的内容；若此时在面板里点过任何滑块，它会把回落状态写回
+> `NKSC_PARAM`，把我们刚生成的 sidecar 覆盖掉。
 
 渲完：
 
@@ -302,3 +369,48 @@ NX Studio 1.7 里也没有，所以这 4 对没法真渲对照。
 
 导出的 26 张按槽号放 `d300/samples/real_target/`，与 `real_v3/` 里同槽号的图逐像素比较
 （同底片、同尺寸 4288×2848，严格对齐）。
+
+---
+
+## 九、「优化校准」栏里的名字不可信（2026-11-02 11:20 实测）
+
+`_probe_profile` 那 7 张打开后，信息栏里**每一张都显示 `P0_STANDARD`**，
+看着像「NCP 没套对」。实际不是 —— 名字是显示层的问题，像素是对的。
+
+### 证据一：像素确实各走各的
+
+同一处 1:1 裁切，`mean|diff|`（对 P0_STANDARD）：
+
+| 探针 | 底子 | mean\|diff\| |
+|---|---|---|
+| P0_STANDARD | 0x0001 | 0.00 |
+| P1_PORTRAIT | 0x0486 | 5.01 |
+| P2_LANDSCAPE | 0x04C7 | 5.53 |
+| P3_D2XMODE1 | 0x0014 | 4.52 |
+| P4_D2XMODE2 | 0x03D5 | 4.38 |
+| P5_D2XMODE3 | 0x00D6 | 5.33 |
+
+七张两两比较没有一对相同（P6 单色 0x064D 更是直接变黑白）。
+**P6 变黑白这一条最硬**：如果渲染用的是「显示的那个 P0」，P6 不可能变灰。
+
+复现：`python tools/chart_profile_bases.py --dir ../_probe_profile`
+→ `charts/profile-bases.jpg`（上排 1:1 裁切，下排差值 ×8）。
+
+### 证据二：名字根本不在 sidecar 的文本里
+
+`_probe_profile/NKSC_PARAM/P3_D2XMODE1.NEF.nksc` 里搜 `P0` 与 `STANDARD`：**0 次**；
+`<PictureControl>` 与 `<SelectedPictureControl>` 全是 **1**（沿用模板 `DSC_4484` 的值）。
+名字只存在于 base64 的 `<CustomData>` / `<ExportData>` 里，而这两处在每份 sidecar 里
+都是对的（P3 那份解出来就是 `P3_D2XMODE1` + 底子 `0x0014`）。
+
+于是能解释成：**渲染读文件里的 blob（每张各走各的），而信息栏那个名字是按
+`<PictureControl>=1` 去查一张内部表**，表项 1 是本次扫描里第一份 blob 的名字（P0）。
+7 份 sidecar 共用 id 1 → 7 张都挂 P0 的名字。
+
+### 规则
+
+1. **别拿信息栏的名字判断套没套上**，一律看像素（或看导出后的文件名）。
+2. 探针的判据要写成「两张之间像不像」，不能写成「名字对不对」。
+3. 这个毛病不影响数据：导出按源文件名命名，`P1_PORTRAIT.JPG` 就是 P1。
+4. 想改名字可以试「每份写不同的 `<PictureControl>`」，但 id 落到未知值可能整份回落成
+   「与照相机兼容」—— 那会把这一轮探针作废，所以**没敢在第一轮就动**。

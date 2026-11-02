@@ -296,3 +296,25 @@ DREAM 原版的动作是「柔化 + 整体加一层暖调朦胧」，柔化（�
 ```
 
 重新生成：`python compare_samples.py --images`（放在 `D300_NCP/` 里，需 `测试图片/` 里的原始导出）。
+
+---
+
+## 附：2026-11-02 这一轮新增的数据文件
+
+上面那 30 对成片的口径没变，下面这些是新加的、各自服务不同结论的表。
+每张表的「怎么来的」都写在生成它的脚本头部，这里只列口径。
+
+| 文件 | 行数 | 是什么 | 生成 / 判读 |
+|---|---|---|---|
+| `metrics_lut.csv` | 26 | 加 3D LUT 前后的逐支指标：`mad`/`dE00` 的 before-after、可辨像素比例 `jnd_*`、加表后残余的 `dL_after`/`dC_after`、2×2 留出 `cv_*` | `tools/lut_fit.py` |
+| `oracle_global.csv` | 26 | 机内上界（滑块**不限档**）：任意单调曲线 + 连续饱和度/色相能到的最好值，含最优 `k`/`deg` | `tools/oracle_global.py` |
+| `oracle_reachable.csv` | 26 | 同上，但搜索区间换成本机**实测可达**值（k 0.648–1.275、θ ±11.5°）。与上一张的差就是「拆掉 ±3 钳子」的全部价值 = 0.01 ΔE00 | `tools/oracle_global.py --kmin … --dmax 11.5` |
+| `profile_table.csv` | 38 | 从 `Rome2.dll` dump 出来的底子注册表：`(kind<<16)\|num` 键、名字。**创意底只到 0x080D**，官方 NP3 用的 0x080E–0x0814 没注册 | `tools/dump_rome2_table.py --csv` |
+| `ncp_header.csv` | — | 593 份现成 NCP 的 `(底子, 第26字节, 第27字节)` 计数。第 26 字节只有 `0x00`/`0x02`，**没有一份 `0x08`** —— 这是「NCP 不承载 kind=8」的旁证 | `tools/ncp_header_stats.py --csv` |
+| `probe_profile.csv` | 7 | 7 张恒等曲线底子探针的读数（`P0_STANDARD` 为基准）。五个新底子全部独立生效，但最大收益只有 ΔE00 −0.04 | `tools/probe_profile_read.py` |
+| `lut_pairs/*.jpg` | 5 | 加 LUT 前后的 1:1 对照裁切（CHARCOAL / DENIM / DREAM / MORNING / TOY） | `tools/lut_fit.py --apply` |
+
+> 注意 `metrics_lut.csv` 的 `dE00` 只统计中间调（剪裁区与端点不计），
+> `mad` 是全画面平均差 —— 两个口径不能混着比，这也是早期几版数字对不上的原因。
+> 另：`probe_profile.csv` 里的 `c_ratio` 是「相对 P0 的平均彩度比」，
+> LANDSCAPE（0x04C7）是唯一一支 > 1 的（1.092），其余三支都在减彩度。

@@ -591,3 +591,57 @@ Report: [`d300/charts/real-gap.html`](d300/charts/real-gap.html)
   call rests on 8 identity-curve probes that change nothing but the base id (`_probe_baseid/`).
   Chart [`d300/charts/baseid-gap.jpg`](d300/charts/baseid-gap.jpg), details in
   [`d300/docs/15-picture-control-base.md`](d300/docs/15-picture-control-base.md).
+
+---
+
+## 14. After the in-camera ceiling: a residual 3D LUT and a general converter (2026-11-02)
+
+The three byte-level degrees of freedom left in section 13 are now **all measured closed**:
+
+| Freedom | Test | Outcome |
+|---|---|---|
+| Base id (9 basic bases) | 7 identity-curve probes | five bases take effect independently, best case only **ΔE00 −0.04** |
+| Saturation beyond ±3 | write −6/−9/+6/+9 | **hard-clamped at ±3** (−6/−9 are pixel-identical to −3) |
+| Creative bases `0x0801–0x0814` | byte 38 = `0x08` | **NX Studio crashes**, same fault offset three times |
+
+The crash is understood at instruction level: `Rome2.dll` lookup at `0x13A170` returns
+**the entry count (38) instead of −1** on a miss, the caller uses it as an index and
+dereferences a null pointer. `kind` comes from `[profile+0x1b0]`, filled in by the loader —
+no file byte can change it. Corroboration: 593 existing NCPs all carry version `"0100"` and
+byte 38 is only `0x00`/`0x02`; not one is `0x08`. The container does not carry kind=8.
+The full 38-entry base table is in
+[`d300/docs/20-ncp-crash-and-profile-table.md`](d300/docs/20-ncp-crash-and-profile-table.md).
+
+Re-running the ceiling search with the measured reachable range (k 0.648–1.275, θ ±11.5°)
+gives **4.43** for the 26 filters (colour 5.20 / mono 1.21) — 0.01 away from the
+unconstrained 4.44. **The limit is expressive dimension, not parameter range.**
+
+### 14.1 The post-processing path: 5.36 → 2.10
+
+What the camera cannot express (per-hue, per-luminance 3D remapping) is fitted as an
+RGB→RGB map instead of forced into a 1D curve:
+
+| Group | n | NCP only | + residual LUT | holdout |
+|---|---|---|---|---|
+| All | 26 | 5.36 | **2.10** | 2.13 |
+| Colour | 21 | 6.02 | **2.00** | — |
+
+20 of 26 reach ΔE00 < 2.0; mean difference 6.45 → 3.18 levels; visibly different pixels
+63% → 22.8%. Tables live in [`d300/lut/`](d300/lut/) (33³ per filter, ~0.95 MB),
+fitter is `d300/tools/lut_fit.py`. A **shared** table is measurably worse (7.02), so one
+table per filter is mandatory.
+
+### 14.2 The general converter: an NP3 carries a pointer, not a curve
+
+An NP3 is 22 two-byte cards. Across 59 files, contrast/brightness/saturation/hue are
+**always zero**; what actually decides the look is the 2-byte **base id** in card 3.
+So "NP3 → NCP" reduces to a base-id → recipe table; 26 measured recipes cover all 20
+creative bases `0x0801–0x0814`.
+
+- Web version (single file, pure client-side): <https://github.com/Pinksert/np3-to-ncp>
+- CLI: `python d300/tools/np3_to_ncp.py -i X.NP3 -o X.NCP`
+- Self-check: `--verify` reproduces all 26 **byte-for-byte** against `d300/ncp/release/`
+- Details: [`d300/docs/23-np3-to-ncp-converter.md`](d300/docs/23-np3-to-ncp-converter.md)
+
+One in-camera item remains: re-fitting the curves of the 5 monochrome filters against the
+current residual (2.55 → 1.21; BINARY 7.75 → 1.67). That is pure local computation.

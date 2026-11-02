@@ -96,9 +96,27 @@ def slot_stem(fn):
 
 
 def read_sidecar(path):
-    """返回 (原始文本, 已 unescape 的文本)。XMP 里 NineEdits 是转义过的 XML。"""
+    """返回 (原始文本, 已 unescape 的文本)。XMP 里 NineEdits 是转义过的 XML。
+
+    ⚠️ **要写回文件时必须用第一个返回值 raw**，不是第二个。
+       第二个是给「读值/搜索」用的；拿它回写会把 NineEdits 里的 XML 变成裸尖括号，
+       NX Studio 的 XMP 解析器整份丢弃该 sidecar，界面上直接退回「拍摄时设定」。
+       （2026-11-01 底子探针两批就栽在这上面。）
+    """
     raw = open(path, encoding='utf-8', errors='replace').read()
     return raw, html.unescape(raw)
+
+
+def template_text(path):
+    """读模板，返回**可回写**的原始文本，并校验它是转义形态。"""
+    raw = read_sidecar(path)[0]
+    if '<userData>' in raw:
+        raise SystemExit('模板里 NineEdits 是裸 XML（未转义），写回后 NX Studio 会忽略：%s'
+                         % path)
+    if '&lt;userData&gt;' not in raw:
+        raise SystemExit('模板里找不到转义过的 NineEdits，不是 NX Studio 的调整文件：%s'
+                         % path)
+    return raw
 
 
 def embed_data(sidecar_text, filt_bytes, slot02=True):
@@ -118,6 +136,11 @@ def embed_data(sidecar_text, filt_bytes, slot02=True):
     is_ncp = filt_bytes[4:8] == b'\x00\x00\x00\x01'
     if slot02 and is_ncp and len(e) > 38:
         e[38] = 0x02                       # 复刻 NX Studio 应用态的那个字节
+    # 闸门：塞进来的必须是转义形态模板。read_sidecar() 的第二个返回值是反转义过的，
+    # 拿它回写 → NineEdits 变裸 XML → NX Studio 静默忽略整份 sidecar。
+    if '&lt;' not in sidecar_text and '<userData>' in sidecar_text:
+        raise ValueError('sidecar 文本是反转义形态（NineEdits 为裸 XML），'
+                         '写回后 NX Studio 会忽略；请改用 read_sidecar()[0] 或 template_text()')
     out, ok1 = _embed_one(sidecar_text, 'ExportData', bytes(e))
     out, ok2 = _embed_one(out, 'CustomData', bytes(c))
     if not ok1:
