@@ -29,7 +29,7 @@ Two generations of work live here. **Just want something that works?** Go straig
 | ├ `d300/lut/` | 26 × 33³ post-processing 3D LUTs + 1 summary table |
 | ├ `d300/samples/` | 30 same-scene before/after pairs, side-by-sides, per-preset CSVs |
 | ├ `d300/charts/` | Every figure used in the docs |
-| ├ `d300/tools/` | 78 scripts: every figure, table and probe can be re-run |
+| ├ `d300/tools/` | 83 scripts: every figure, table and probe can be re-run |
 | └ `d300/web/np3-to-ncp/` | Web converter, single file, runs entirely client-side |
 
 ## 1. The three generations
