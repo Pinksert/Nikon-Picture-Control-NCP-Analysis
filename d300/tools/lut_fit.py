@@ -123,6 +123,35 @@ def identity_grid(N):
     return G.astype(np.float64)
 
 
+def grid_support(src, N):
+    """把样本点散进 N³ 个格子，数每格有多少像素 —— 判断「这张图铺到了色域的哪些地方」"""
+    idx = np.clip((src / 255.0 * (N - 1)).round().astype(int), 0, N - 1)
+    flat = idx[:, 0] * N * N + idx[:, 1] * N + idx[:, 2]
+    return np.bincount(flat, minlength=N ** 3).reshape(N, N, N)
+
+
+def fill_grid_gaps(G, sup, rounds=60, k=3):
+    """把「样本不足」的格子用邻居扩散补上（Jacobi 迭代，有样本的格子当边界条件）。
+
+    为什么必须补：`splat_avg` 对支撑不足的格子返回 0 残差，也就是**保持恒等**。
+    在那张标定图上永远走不到这些格子，所以看不出来；换一张图，只要它的颜色落进来，
+    查表就等于什么都没做 —— 这是跨底片掉分的一个真实来源（`docs/26` 第三节，r=0.76）。
+    补上之后整张表在色域里处处有定义，新图落进来是有意义的插值而不是掉回原样。
+    """
+    valid = sup >= k
+    if valid.all():
+        return G
+    I = identity_grid(G.shape[0])
+    resid = np.where(valid[..., None], G - I, 0.0)
+    for _ in range(rounds):
+        p = np.pad(resid, ((1, 1), (1, 1), (1, 1), (0, 0)), mode='edge')
+        nb = (p[0:-2, 1:-1, 1:-1] + p[2:, 1:-1, 1:-1]
+              + p[1:-1, 0:-2, 1:-1] + p[1:-1, 2:, 1:-1]
+              + p[1:-1, 1:-1, 0:-2] + p[1:-1, 1:-1, 2:]) / 6.0
+        resid = np.where(valid[..., None], resid, nb)
+    return np.clip(I + resid, 0.0, 255.0)
+
+
 def fit_lut(src, dst, N=17, iters=120, damp=0.5, sround=0, stages=(5, 9), trust=40.0):
     """拟合 src -> dst 的三维映射，返回网格 (N,N,N,3)
 
@@ -230,9 +259,19 @@ def main():
     ap.add_argument('--cv-iters', type=int, default=60)
     ap.add_argument('--only', default=None, help='逗号分隔的滤镜名')
     ap.add_argument('--preview', default=None, help='逗号分隔，生成三联预览')
+    ap.add_argument('--suffix-o', default='', help='源侧文件名后缀，如 __O')
+    ap.add_argument('--suffix-t', default='', help='目标侧文件名后缀，如 __T')
+    ap.add_argument('--fill-gaps', action='store_true',
+                    help='把标定图没采到的格子按邻居扩散补上（跨底片友好；'
+                         '见 docs/26 第三节，26 支 × 2 方向合计 -0.29）')
+    ap.add_argument('--lut-dir', default=None,
+                    help='cube 输出目录（默认 lut/）。给新底片标定时一定要指定，'
+                         '否则会覆盖掉 4484 那套')
     ap.add_argument('--out', default=os.path.join(SAMP, 'metrics_lut.csv'))
     a = ap.parse_args()
 
+    lutd = a.lut_dir or LUTD
+    os.makedirs(lutd, exist_ok=True)
     os.makedirs(LUTD, exist_ok=True)
     os.makedirs(os.path.join(SAMP, 'lut_pairs'), exist_ok=True)
     want = set(x.strip().upper() for x in a.only.split(',')) if a.only else None
@@ -243,7 +282,8 @@ def main():
     for slot, name in enumerate(NAMES, 1):
         if want and name not in want:
             continue
-        pa, pb = find(a.v3, slot, name), find(a.target, slot, name)
+        pa = find(a.v3, slot, name, a.suffix_o)
+        pb = find(a.target, slot, name, a.suffix_t)
         if not pa or not pb:
             continue
         A, B = load(pa, a.size), load(pb, a.size)
@@ -253,6 +293,8 @@ def main():
         src, dst = A[m], B[m]
 
         G = fit_lut(src, dst, N=a.grid, iters=a.iters)
+        if a.fill_gaps:
+            G = fill_grid_gaps(G, grid_support(src, a.grid))
         corr = np.clip(interp(G, src), 0, 255)
         before = _raw_metrics(src, dst)
         after = _raw_metrics(corr, dst)
@@ -286,7 +328,7 @@ def main():
             mad_full1 = mad_full0
 
         cube = cube_from_grid(G, 33)
-        write_cube(os.path.join(LUTD, '%02d_%s.cube' % (slot, name)), cube,
+        write_cube(os.path.join(lutd, '%02d_%s.cube' % (slot, name)), cube,
                    'NCP residual %s' % name)
         if name in prev and useful:
             cache[name] = (A.copy(), B.copy(), cube)
@@ -306,7 +348,8 @@ def main():
     if len(rows) >= 6 and not want:
         allsrc, alldst = [], []
         for r in rows:
-            pa, pb = find(a.v3, r['slot'], r['name']), find(a.target, r['slot'], r['name'])
+            pa = find(a.v3, r['slot'], r['name'], a.suffix_o)
+            pb = find(a.target, r['slot'], r['name'], a.suffix_t)
             A, B = load(pa, a.size), load(pb, a.size)
             mm = mask_of(A, B)
             allsrc.append(A[mm][::4])
@@ -314,7 +357,8 @@ def main():
         Gg = fit_lut(np.vstack(allsrc), np.vstack(alldst), N=a.grid, iters=a.iters)
         des, mads = [], []
         for r in rows:
-            pa, pb = find(a.v3, r['slot'], r['name']), find(a.target, r['slot'], r['name'])
+            pa = find(a.v3, r['slot'], r['name'], a.suffix_o)
+            pb = find(a.target, r['slot'], r['name'], a.suffix_t)
             A, B = load(pa, a.size), load(pb, a.size)
             mm = mask_of(A, B)
             rr = _raw_metrics(np.clip(interp(Gg, A[mm]), 0, 255), B[mm])
@@ -323,7 +367,7 @@ def main():
         print('-' * 72)
         print('共用一张 LUT（所有支汇总拟合）：%.2f 级 / dE00 %.2f'
               % (np.mean(mads), np.mean(des)))
-        write_cube(os.path.join(LUTD, '00_共用_global.cube'),
+        write_cube(os.path.join(lutd, '00_共用_global.cube'),
                    cube_from_grid(Gg, 33), 'NCP residual pooled')
 
     for name, (A, B, cube) in cache.items():
@@ -356,7 +400,7 @@ def main():
                          np.mean([r['de0'] for r in sel]),
                          np.mean([r['de1'] for r in sel])))
         print('csv  -> %s' % a.out)
-        print('cube -> %s' % LUTD)
+        print('cube -> %s' % lutd)
 
 
 def read_cube(path):

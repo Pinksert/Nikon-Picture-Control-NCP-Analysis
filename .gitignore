@@ -2,3 +2,10 @@ __pycache__/
 *.pyc
 *.pyo
 .ipynb_checkpoints/
+
+# 大体积成片与中间缓存（保留在本地工作副本，不进仓库）
+d300/samples/real_v3/
+d300/samples/real_target/
+d300/samples/probe_slider/
+d300/samples/*.npz
+d300/tools/anchor_crop.json

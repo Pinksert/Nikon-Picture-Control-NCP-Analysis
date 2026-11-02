@@ -29,7 +29,7 @@ Two generations of work live here. **Just want something that works?** Go straig
 | ├ `d300/lut/` | 26 × 33³ post-processing 3D LUTs + 1 summary table |
 | ├ `d300/samples/` | 30 same-scene before/after pairs, side-by-sides, per-preset CSVs |
 | ├ `d300/charts/` | Every figure used in the docs |
-| ├ `d300/tools/` | 67 scripts: every figure, table and probe can be re-run |
+| ├ `d300/tools/` | 78 scripts: every figure, table and probe can be re-run |
 | └ `d300/web/np3-to-ncp/` | Web converter, single file, runs entirely client-side |
 
 ## 1. The three generations
@@ -667,3 +667,23 @@ creative bases `0x0801–0x0814`.
 
 One in-camera item remains: re-fitting the curves of the 5 monochrome filters against the
 current residual (2.55 → 1.21; BINARY 7.75 → 1.67). That is pure local computation.
+
+### 14.3 Cross-film: the in-camera set transfers, the LUTs do not (2026-11-02)
+
+Validated on a second frame (DSC_8981, a cityscape with a completely different tone and
+colour makeup). The in-camera NCPs transfer: **5.28 → 5.11 (0.97x)** across 26 filters.
+The `.cube` files do not: calibrated on 4484 they score **3.33** on 8981, versus **2.19**
+when re-calibrated there — and re-calibration is not overfitting, it is just the correct
+usage. Root cause: the official renderer is not a per-pixel RGB→RGB function. The same
+input RGB gets an official output that differs by **4.07 levels** between the two frames,
+while two random halves of one frame differ by only **0.65**.
+
+Three follow-up hypotheses were tested (switch the LUT domain to a neutral anchor /
+fill the empty LUT cells / add a global affine correction). Only the second one pays off,
+and it is free: filling unpopulated grid cells takes **3.71 → 3.42** (r = 0.76 against the
+uncovered fraction). Everything else requires ground truth for the new frame, and once you
+have it, plain re-calibration (**2.16**) beats LUT transfer (2.84).
+
+- Re-calibrate a new frame: `d300/tools/lut_fit.py --v3 in/ --target in/ --suffix-o __O --suffix-t __T --fill-gaps --lut-dir lut_8981`
+- Details (Chinese): [`d300/docs/25-cross-film-validation.md`](d300/docs/25-cross-film-validation.md),
+  [`d300/docs/26-cross-film-map.md`](d300/docs/26-cross-film-map.md)

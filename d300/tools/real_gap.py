@@ -53,11 +53,11 @@ def load(path, size):
     return np.asarray(im, dtype=np.float64)
 
 
-def find(d, slot, name):
-    """后缀大小写都不一定，按「编号_名字」前缀找"""
+def find(d, slot, name, suf=''):
+    """后缀大小写都不一定，按「编号_名字」前缀找；suf 用来区分 __O / __T 这种同源两份"""
     if not os.path.isdir(d):
         return None
-    stem = '%02d_%s' % (slot, name)
+    stem = '%02d_%s%s' % (slot, name, suf)
     for f in os.listdir(d):
         b, _ = os.path.splitext(f)
         if b.upper() == stem.upper():

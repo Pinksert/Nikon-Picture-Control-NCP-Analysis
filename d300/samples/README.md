@@ -299,22 +299,34 @@ DREAM 原版的动作是「柔化 + 整体加一层暖调朦胧」，柔化（�
 
 ---
 
-## 附：2026-11-02 这一轮新增的数据文件
+## 附：单色重拟合这一轮新增的两张表（2026-11-02）
 
-上面那 30 对成片的口径没变，下面这些是新加的、各自服务不同结论的表。
-每张表的「怎么来的」都写在生成它的脚本头部，这里只列口径。
-
-| 文件 | 行数 | 是什么 | 生成 / 判读 |
+| 文件 | 行数 | 是什么 | 生成 |
 |---|---|---|---|
-| `metrics_lut.csv` | 26 | 加 3D LUT 前后的逐支指标：`mad`/`dE00` 的 before-after、可辨像素比例 `jnd_*`、加表后残余的 `dL_after`/`dC_after`、2×2 留出 `cv_*` | `tools/lut_fit.py` |
-| `oracle_global.csv` | 26 | 机内上界（滑块**不限档**）：任意单调曲线 + 连续饱和度/色相能到的最好值，含最优 `k`/`deg` | `tools/oracle_global.py` |
-| `oracle_reachable.csv` | 26 | 同上，但搜索区间换成本机**实测可达**值（k 0.648–1.275、θ ±11.5°）。与上一张的差就是「拆掉 ±3 钳子」的全部价值 = 0.01 ΔE00 | `tools/oracle_global.py --kmin … --dmax 11.5` |
-| `profile_table.csv` | 38 | 从 `Rome2.dll` dump 出来的底子注册表：`(kind<<16)\|num` 键、名字。**创意底只到 0x080D**，官方 NP3 用的 0x080E–0x0814 没注册 | `tools/dump_rome2_table.py --csv` |
-| `ncp_header.csv` | — | 593 份现成 NCP 的 `(底子, 第26字节, 第27字节)` 计数。第 26 字节只有 `0x00`/`0x02`，**没有一份 `0x08`** —— 这是「NCP 不承载 kind=8」的旁证 | `tools/ncp_header_stats.py --csv` |
-| `probe_profile.csv` | 7 | 7 张恒等曲线底子探针的读数（`P0_STANDARD` 为基准）。五个新底子全部独立生效，但最大收益只有 ΔE00 −0.04 | `tools/probe_profile_read.py` |
-| `lut_pairs/*.jpg` | 5 | 加 LUT 前后的 1:1 对照裁切（CHARCOAL / DENIM / DREAM / MORNING / TOY） | `tools/lut_fit.py --apply` |
+| `mono_refit.csv` | 5 | 5 支单色的重拟合结果：四个口径（`dE_either` / `dE_both` / `dE_all` / `haze`）的前后值、2×2 留出的 `cv_either`、`refit` 是否改写 | `tools/mono_refit.py` |
+| `mono_disagree.csv` | 4 | BINARY 的分歧像素按“本来颜色”拆开：两组「两派判得不一样」里 R/G/B 主导各占多少 | `tools/mono_refit.py --evidence` |
 
-> 注意 `metrics_lut.csv` 的 `dE00` 只统计中间调（剪裁区与端点不计），
-> `mad` 是全画面平均差 —— 两个口径不能混着比，这也是早期几版数字对不上的原因。
-> 另：`probe_profile.csv` 里的 `c_ratio` 是「相对 P0 的平均彩度比」，
-> LANDSCAPE（0x04C7）是唯一一支 > 1 的（1.092），其余三支都在减彩度。
+口径提醒（这轮新加的，和以前不能混着比）：
+
+- `dE_either` 是**主指标**，只排除「两边都剪裁」的像素。以前用的 `dE_both`（排除任一边剪裁）
+  有两个漏洞：多剪裁能刷分（BINARY 实测能把 7.69 刷成 2.26），而且看不见「该黑没黑」的灰雾。
+- `haze` 是「我们剪裁、参考没剪」的百分点，正数表示我们把画面压死得更多。
+- 只有 `refit=1` 的两支（CHARCOAL / MONOCHROME）进了 `ncp/release_v4/`，其余三支原样复制。
+
+---
+
+## 附：跨底片这一轮新增的表（2026-11-02）
+
+| 文件 | 组数 | 是什么 | 生成 |
+|---|---|---|---|
+| `validate_8981.csv` | 26 | 换底片：机内误差、套旧 LUT、结论 | `tools/validate_read.py --csv` |
+| `validate_refit.csv` | 26 | 新底片上重标定：全量与 2×2 留出 | `tools/validate_refit.py` |
+| `validate_mapping.csv` | 26 | 跨底片与同图内的格子均值差（映射是不是逐像素函数） | `tools/validate_mapping.py` |
+| `crossfilm_domain.csv` | 26 | 两个输入域（成片 / 中性锚点）的不确定性对比 | `tools/crossfilm_domain.py` |
+| `crossfilm_coverage.csv` | 52 | 未覆盖比例与补空洞前后的 ΔE00 | `tools/crossfilm_coverage.py` |
+| `crossfilm_calib.csv` | 52×11 | 整图仿射补偿的各方案（逐支 / 共用 / 前 / 后） | `tools/crossfilm_calib.py` |
+| `crossfilm_family.csv` | 52×若干 | 几种全局变换族的横向比较 | `tools/crossfilm_family.py` |
+| `crossfilm_map.csv` | 52×8 | 最终自洽表：直接套 → 补空洞 → 叠整图补偿 | `tools/crossfilm_map.py` |
+
+口径提醒：`crossfilm_*.csv` 的基线是 **26 支 × 两个方向**，所以是 3.71；
+`docs/25` 的 3.33 只算了 23 支真有 LUT 的、单方向。两组数不能混着比，比较要在同一张表内做。
