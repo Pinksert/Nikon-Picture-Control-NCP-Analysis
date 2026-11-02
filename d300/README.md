@@ -12,6 +12,9 @@
 
 > 目录约定：`ncp/out/` 是按文件原意生成的 30 个 NCP；`ncp/out_comp/` 是抵消了引擎变换的补偿版；
 > **`ncp/release/` 是正式发布包**（第三版，可直接拷卡）；`ncp/release_v2/`、`ncp/release_v1/` 是历史存档。
+> 单色 5 支另有两版修订：`release_v4/`（曲线重拟合，只改 CHARCOAL 与 MONOCHROME）、
+> `release_v5/`（在 v4 基础上把 BINARY 的第 45 字节换成绿滤镜 `0x84`），见
+> [docs/24-mono-refit.md](docs/24-mono-refit.md)。
 > 选哪一个在第 7 节与第 12 节有定案：**用 release**。
 >
 > **第三版（当前发布包）**：把「判断一支该不该动」的留出验证从上下半幅换成 **2×4 = 8 折交叉验证**，
@@ -357,7 +360,8 @@ d300/
 │   ├── 20-ncp-crash-and-profile-table.md  ★ NX Studio 闪退的指令级定位 + 底子注册表
 │   ├── 21-namespace-byte.md           ★ 第 38 字节是不是「命名空间」：实测否定
 │   ├── 22-in-camera-ceiling-locked.md ★ 机内天花板结案：可达上界 4.43
-│   └── 23-np3-to-ncp-converter.md     ★ NP3→NCP 通用算法（底子→配方表）与网页版
+│   ├── 23-np3-to-ncp-converter.md     ★ NP3→NCP 通用算法（底子→配方表）与网页版
+│   └── 24-mono-refit.md               ★ 单色 5 支：曲线只救两支，BINARY 靠绿滤镜 6.98→6.24
 ├── tools/                        生成、补偿、体检、回比脚本
 │   ├── build_pack7.py            生成验证卡包（8 个槽位）
 │   ├── build_release.py          生成第一版归档包（写 ncp/release_v1/）

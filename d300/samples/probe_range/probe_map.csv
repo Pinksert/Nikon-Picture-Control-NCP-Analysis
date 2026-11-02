@@ -1,0 +1,9 @@
+﻿file,ncp_name,slot,change,why
+P1,P1 SIL-6,7,43:7A,饱和度越过 −3：字节范围到底认到哪
+P2,P2 SIL-9,7,43:77,同上，再往外走两档看有没有线性延伸
+P3,P3 DEN+6,11,43:86,反方向：偏淡的支能不能加过头
+P4,P4 TOY+6,12,43:86,TOY 现在 −2，一步跨到 +6
+P5,P5 DEN-VIV,11,36:00 37:C3,底子换 VIVID（曲线不动）
+P6,P6 TOY-VIV,12,36:00 37:C3,底子换 VIVID
+P7,P7 DRE-VIV,1,36:00 37:C3,底子换 VIVID
+P8,P8 DRA-NEU,6,36:03 37:C2,偏浓的支换 NEUTRAL
