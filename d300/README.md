@@ -376,7 +376,7 @@ d300/
 │   ├── compare_samples.py        成片对比：指标计算 + 并排出图
 │   ├── filter_character.py       ★ 性格表：30 支原版相对 STANDARD 的位移
 │   ├── probe_slider_pack.py      生成滑块标定探针（同曲线，只差一个字节）
-│   ├── probe_baseid_probe.py     生成底子维度探针（恒等曲线，只差底子字节）
+│   ├── pack_baseid_probe.py      生成底子维度探针（恒等曲线，只差底子字节）
 │   ├── pack_baseid_camera.py     底子「机身准入」卡包（8 个，30 秒判读）
 │   ├── pack_color_mech.py        ★ 色彩机制卡包：着色字节 / 单色底加饱和度 / 浓度斜率
 │   ├── probe_color_mech_read.py  ★ 上面那个卡包的判读脚本

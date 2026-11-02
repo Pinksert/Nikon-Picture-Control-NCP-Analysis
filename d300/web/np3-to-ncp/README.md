@@ -13,4 +13,4 @@ cd ../../   # d300/
 python tools/np3_to_ncp.py --build-web
 ```
 
-算法与局限见 [`../docs/23-np3-to-ncp-converter.md`](../docs/23-np3-to-ncp-converter.md)。
+算法与局限见 [`../../docs/23-np3-to-ncp-converter.md`](../../docs/23-np3-to-ncp-converter.md)。

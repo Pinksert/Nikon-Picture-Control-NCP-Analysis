@@ -10,6 +10,28 @@ All numbers in this document were measured on real files, not guessed.
 Sample set: 42 factory presets exported by Nikon Picture Control Utility 2
 (6 × .NCP, 8 × .NP2, 28 × .NP3).
 
+## Repository map
+
+Two generations of work live here. **Just want something that works?** Go straight to
+`d300/ncp/release/` (card-ready package) and `d300/lut/` (post-processing LUTs).
+
+| Path | What it is |
+|---|---|
+| `README.md` · [README_EN.md](README_EN.md) | Generation 1: byte-level layout of NCP / NP2 / NP3 |
+| `np2ncp.py` `np2ncp_curve.py` `make_curve_batch.py` `verify_curve.py` | Generation 1 tools: NP2/NP3 → 52-byte NCP, curve recovery, verification |
+| `tools/` | Analysis, calibration and batch helpers used by the four scripts above (20) |
+| `presets/` | 44 preset samples (8 .NCP / 8 .NP2 / 28 .NP3) — input for every number here |
+| `data/` | Raw dumps and calibration results exported from NX Studio |
+| `output/curve_all/` | 35 curve-embedded NCPs from generation 1 (30 presets + variants), upstream of `d300/ncp/out/` |
+| **[`d300/`](d300/)** | **Generation 2: on-camera work with a real D300** (three rounds of body tests, curve fitting, post LUTs, a general NP3 converter, a web version) |
+| ├ `d300/docs/` | 24 measured write-ups; the numbering is the reading order |
+| ├ `d300/ncp/` | Release packages and every test pack (`release/` = v3, `release_v1..v5`, `out`/`out_comp`, `packs/`, `test-packs/`, `probes/`) |
+| ├ `d300/lut/` | 26 × 33³ post-processing 3D LUTs + 1 summary table |
+| ├ `d300/samples/` | 30 same-scene before/after pairs, side-by-sides, per-preset CSVs |
+| ├ `d300/charts/` | Every figure used in the docs |
+| ├ `d300/tools/` | 67 scripts: every figure, table and probe can be re-run |
+| └ `d300/web/np3-to-ncp/` | Web converter, single file, runs entirely client-side |
+
 ## 1. The three generations
 
 | | NCP | NP2 | NP3 |
